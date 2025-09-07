@@ -129,16 +129,43 @@ body {
 
 @media (max-width: 991.98px) {
   .main-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1050;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
   }
 
+  /* Adicionando classe para mostrar sidebar no mobile */
   .sidebar-open .main-sidebar {
     transform: translateX(0);
   }
 
+  /* Overlay para fechar menu ao clicar fora */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    display: none;
+  }
+
+  .sidebar-open .sidebar-overlay {
+    display: block;
+  }
+
   .brand-image {
     height: 120px;
+  }
+
+  /* Ajustando content wrapper para mobile */
+  .content-wrapper {
+    margin-left: 0 !important;
   }
 }
 
@@ -828,6 +855,9 @@ body {
   padding: var(--spacing-xl);
   position: relative;
   overflow: hidden;
+  animation: chatbotSlideIn .3s ease-out;
+  z-index: 1000000;
+  font-size: .9rem;
 }
 
 /* Logo dentro do card de autenticação */
