@@ -175,24 +175,38 @@
 
     /* Adicionando responsividade mobile para o login */
     @media (max-width: 768px) {
+      body {
+        /* Removendo overflow hidden para permitir scroll se necessário */
+        overflow: auto;
+      }
+      
       .login-wrapper {
         flex-direction: column;
-        width: 95%;
+        width: 100%;
         height: 100vh;
         min-height: 100vh;
         border-radius: 0;
+        /* Removendo box-shadow no mobile para design mais limpo */
+        box-shadow: none;
       }
       
       .left-panel {
         width: 100%;
+        /* Aumentando padding e ajustando altura para melhor proporção */
         padding: 2rem 1.5rem;
         order: 1;
+        flex: 1;
+        min-height: 60vh;
       }
       
       .right-panel {
         width: 100%;
-        height: 200px;
+        /* Aumentando altura da área da imagem para 40% da tela */
+        height: 40vh;
+        min-height: 300px;
         order: 2;
+        /* Adicionando gradiente sutil para melhor integração visual */
+        background: linear-gradient(180deg, #101c3b 0%, #1a2951 100%);
       }
       
       .right-panel img {
@@ -200,16 +214,23 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        max-width: 80%;
-        max-height: 80%;
+        /* Otimizando tamanho da imagem para ocupar melhor o espaço */
+        max-width: 90%;
+        max-height: 90%;
+        width: auto;
+        height: auto;
+        object-fit: contain;
       }
       
       .login-logo img {
-        height: 100px;
+        /* Mantendo logo em tamanho adequado para mobile */
+        height: 80px;
       }
       
       .login-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        /* Reduzindo margem para otimizar espaço */
+        margin-bottom: 0.3rem;
       }
       
       .login-subtitle {
@@ -218,32 +239,84 @@
       }
       
       .form-control {
+        /* Aumentando padding para melhor usabilidade touch */
         padding: 0.75rem 0;
         font-size: 1rem;
+        /* Aumentando altura da linha inferior para melhor visibilidade */
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .form-control:focus {
+        /* Melhorando feedback visual no foco */
+        border-bottom: 2px solid var(--primary-color);
       }
       
       .btn-primary,
       .btn-success {
-        padding: 0.75rem 1.5rem;
+        /* Aumentando padding para melhor área de toque */
+        padding: 0.875rem 1.5rem;
         font-size: 1rem;
+        font-weight: 600;
+      }
+      
+      .form-label {
+        /* Ajustando tamanho da fonte para melhor legibilidade */
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .mb-3 {
+        /* Aumentando espaçamento entre campos */
+        margin-bottom: 1.5rem !important;
+      }
+      
+      .mb-4 {
+        /* Aumentando espaçamento antes do botão */
+        margin-bottom: 2rem !important;
       }
     }
 
     @media (max-width: 480px) {
       .left-panel {
+        /* Reduzindo padding em telas muito pequenas */
         padding: 1.5rem 1rem;
       }
       
       .right-panel {
-        height: 150px;
+        /* Ajustando altura mínima para telas pequenas */
+        min-height: 250px;
       }
       
       .login-logo img {
-        height: 80px;
+        height: 70px;
       }
       
       .login-title {
         font-size: 1.3rem;
+      }
+      
+      .form-control {
+        /* Mantendo boa usabilidade em telas pequenas */
+        padding: 0.75rem 0;
+      }
+    }
+
+    /* Adicionando media query para landscape mobile */
+    @media (max-width: 768px) and (orientation: landscape) {
+      .login-wrapper {
+        flex-direction: row-reverse;
+      }
+      
+      .left-panel {
+        width: 60%;
+        order: 1;
+        min-height: 100vh;
+      }
+      
+      .right-panel {
+        width: 40%;
+        height: 100vh;
+        order: 2;
       }
     }
   </style>
