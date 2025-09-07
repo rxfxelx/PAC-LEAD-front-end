@@ -242,7 +242,9 @@ function showSection(sectionId) {
       'agent-config': '/agente',
       'analysis': '/analise',
       'products': '/produtos',
-      'payments': '/pagamentos'
+      'payments': '/pagamentos',
+      'company': '/empresa',
+      'users': '/usuarios'
     };
     const newPath = pathMap[sectionId];
     if (newPath && history.pushState) {
