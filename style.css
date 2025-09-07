@@ -154,6 +154,54 @@ body {
 .badge-prospectivos{ background-color:#20c997; color:#fff; }
 .badge-cliente{ background-color:#28a745; color:#fff; }
 
+/* ===== CABEÇALHO PERSONALIZADO ===== */
+/* Estrutura do cabeçalho que exibe a logomarca, saudação e título da seção */
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+/* Logomarca grande no cabeçalho */
+.header-logo {
+  height: 80px;
+  width: auto;
+}
+/* Container de textos dentro do cabeçalho */
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+.header-text .welcome-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: var(--spacing-xs);
+  text-transform: uppercase;
+}
+.header-text .page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+.header-text .page-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ===== ITEM DE SAÍDA NO SIDEBAR ===== */
+.nav-item.logout {
+  margin-top: auto;
+}
+.nav-item.logout .nav-link {
+  color: var(--danger-color);
+}
+.nav-item.logout .nav-link:hover {
+  color: var(--danger-color);
+  background-color: var(--bg-tertiary);
+}
+
 /* ===== MODAIS ===== */
 .modal-content{ background-color:var(--bg-secondary); border:1px solid var(--border-color); border-radius:var(--border-radius-lg); }
 .modal-header{ background-color:var(--bg-tertiary); border-bottom:1px solid var(--border-color); border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0; }
