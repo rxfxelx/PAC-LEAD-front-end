@@ -29,14 +29,28 @@ async function fetchProducts() {
     const res = await fetch(`${BACKEND_BASE}/api/products`, { headers: defaultHeaders });
     if (!res.ok) throw new Error('Falha ao listar produtos');
     const data = await res.json();
-    products = data.items.map(p => ({
-      id: p.id,
-      name: p.title,
-      description: p.slug || '',
-      category: 'Sem categoria',
-      price: 0,
-      image: null
-    }));
+    products = data.items.map(p => {
+      // converte price_cents para float em reais (assume 100 = 1.00)
+      const price = p.price_cents ? (p.price_cents / 100) : 0;
+      // monta data URI se houver base64
+      let img = null;
+      if (p.image_base64) {
+        // tenta detectar se já tem prefixo data:, se não, assume png
+        if (p.image_base64.startsWith('data:')) {
+          img = p.image_base64;
+        } else {
+          img = `data:image/png;base64,${p.image_base64}`;
+        }
+      }
+      return {
+        id: p.id,
+        name: p.title,
+        description: p.slug || '',
+        category: p.category || 'Sem categoria',
+        price: price,
+        image: img
+      };
+    });
     updateProductTable();
   } catch (err) {
     console.error(err);
@@ -54,7 +68,12 @@ async function createProductOnBackend(product) {
       flow_id: Number(defaultHeaders['X-Flow-ID']),
       title: product.name,
       slug: product.description,
-      status: 'active'
+      status: 'active',
+      // envia a imagem em base64 (sem prefixo data:)
+      image_base64: product.imageBase64 || '',
+      price_cents: product.priceCents || 0,
+      stock: product.stock || 0,
+      category: product.category || ''
     };
     const res = await fetch(`${BACKEND_BASE}/api/products`, {
       method: 'POST',
@@ -348,10 +367,33 @@ async function addProduct() {
   if (!price || price <= 0) { showNotification("Por favor, insira um preço válido.", "warning"); return; }
   if (!description) { showNotification("Por favor, descreva o produto.", "warning"); return; }
 
+  // Converte imagem para base64 se houver arquivo. Usa Promise para aguardar
+  const toBase64 = (file) => new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      // result é algo como data:image/png;base64,... Removemos o prefixo
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+
+  const imageBase64 = await toBase64(imgFile);
   const product = {
-    id: Date.now(), name, price,
+    id: Date.now(),
+    name,
+    price,
     category: category || "Sem categoria",
-    description, image: imgFile ? URL.createObjectURL(imgFile) : null
+    description,
+    image: imgFile ? URL.createObjectURL(imgFile) : null,
+    // campos para backend
+    imageBase64: imageBase64,
+    priceCents: Math.round(price * 100),
+    stock: 0,
+    category: category || "Sem categoria",
   };
 
   // Envia o produto ao backend
