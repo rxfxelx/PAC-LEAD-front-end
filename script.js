@@ -834,9 +834,16 @@ class Chatbot {
         });
         if (!response.ok) throw new Error('Erro na resposta do servidor');
         const data = await response.json();
+
         this.hideTypingIndicator();
-        this.addMessage(data.output, 'bot');
-        this._pushHistory('assistant', data.output || '');
+
+        // 🔥 Normaliza diferentes formatos de resposta do backend
+        const text =
+          (data && (data.reply || data.output || data.message || data.text || data.content
+            || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'OK.';
+
+        this.addMessage(text, 'bot');
+        this._pushHistory('assistant', text);
       }
     } catch (error) {
       console.error('Erro ao enviar:', error);
@@ -899,14 +906,15 @@ class Chatbot {
 
       this.hideTypingIndicator();
 
-      if (data.image_url) this.addImageBubble(data.image_url, 'bot');
-      if (data.output) {
-        this.addMessage(data.output, 'bot');
-        this._pushHistory('assistant', data.output);
-      } else {
-        this.addMessage('Imagem recebida.', 'bot');
-        this._pushHistory('assistant', 'Imagem recebida.');
-      }
+      if (data && data.image_url) this.addImageBubble(data.image_url, 'bot');
+
+      // 🔥 Normaliza diferentes formatos de resposta do backend
+      const text =
+        (data && (data.reply || data.output || data.message || data.text || data.content
+          || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'Imagem recebida.';
+
+      this.addMessage(text, 'bot');
+      this._pushHistory('assistant', text);
     } catch (e) {
       console.error(e);
       this.hideTypingIndicator();
