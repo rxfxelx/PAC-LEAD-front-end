@@ -173,11 +173,30 @@
       font-size: 0.9rem;
     }
 
-    /* Adicionando responsividade mobile para o login */
+    /* Novo layout mobile com background desfocado da imagem PAC-LEAD */
     @media (max-width: 768px) {
       body {
-        /* Removendo overflow hidden para permitir scroll se necessário */
         overflow: auto;
+        /* Background com a imagem do PAC-LEAD desfocada */
+        background: linear-gradient(135deg, rgba(15, 28, 63, 0.9) 0%, rgba(23, 30, 72, 0.9) 35%, rgba(45, 14, 62, 0.9) 100%),
+                    url('pacleadhumanoid.png');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        position: relative;
+      }
+      
+      /* Overlay desfocado por cima da imagem de fundo */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(8px);
+        background: rgba(15, 28, 63, 0.7);
+        z-index: -1;
       }
       
       .login-wrapper {
@@ -186,51 +205,41 @@
         height: 100vh;
         min-height: 100vh;
         border-radius: 0;
-        /* Removendo box-shadow no mobile para design mais limpo */
         box-shadow: none;
+        background: transparent;
       }
       
       .left-panel {
         width: 100%;
-        /* Aumentando padding e ajustando altura para melhor proporção */
         padding: 2rem 1.5rem;
         order: 1;
         flex: 1;
-        min-height: 60vh;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /* Card glassmorphism para o formulário */
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 2rem 1rem;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       }
       
       .right-panel {
-        width: 100%;
-        /* Aumentando altura da área da imagem para 40% da tela */
-        height: 40vh;
-        min-height: 300px;
-        order: 2;
-        /* Adicionando gradiente sutil para melhor integração visual */
-        background: linear-gradient(180deg, #101c3b 0%, #1a2951 100%);
-      }
-      
-      .right-panel img {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        /* Otimizando tamanho da imagem para ocupar melhor o espaço */
-        max-width: 90%;
-        max-height: 90%;
-        width: auto;
-        height: auto;
-        object-fit: contain;
+        display: none; /* Escondendo o painel da imagem já que agora é background */
       }
       
       .login-logo img {
-        /* Mantendo logo em tamanho adequado para mobile */
         height: 80px;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
       }
       
       .login-title {
         font-size: 1.4rem;
-        /* Reduzindo margem para otimizar espaço */
         margin-bottom: 0.3rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
       }
       
       .login-subtitle {
@@ -239,52 +248,58 @@
       }
       
       .form-control {
-        /* Aumentando padding para melhor usabilidade touch */
         padding: 0.75rem 0;
         font-size: 1rem;
-        /* Aumentando altura da linha inferior para melhor visibilidade */
         border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px 8px 0 0;
+        padding-left: 1rem;
+        padding-right: 1rem;
       }
       
       .form-control:focus {
-        /* Melhorando feedback visual no foco */
         border-bottom: 2px solid var(--primary-color);
+        background: rgba(255, 255, 255, 0.1);
       }
       
       .btn-primary,
       .btn-success {
-        /* Aumentando padding para melhor área de toque */
         padding: 0.875rem 1.5rem;
         font-size: 1rem;
         font-weight: 600;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        transition: all 0.3s ease;
+      }
+      
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+      }
+      
+      .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
       }
       
       .form-label {
-        /* Ajustando tamanho da fonte para melhor legibilidade */
         font-size: 0.9rem;
         margin-bottom: 0.5rem;
+        font-weight: 600;
       }
       
       .mb-3 {
-        /* Aumentando espaçamento entre campos */
         margin-bottom: 1.5rem !important;
       }
       
       .mb-4 {
-        /* Aumentando espaçamento antes do botão */
         margin-bottom: 2rem !important;
       }
     }
 
     @media (max-width: 480px) {
       .left-panel {
-        /* Reduzindo padding em telas muito pequenas */
         padding: 1.5rem 1rem;
-      }
-      
-      .right-panel {
-        /* Ajustando altura mínima para telas pequenas */
-        min-height: 250px;
+        margin: 1rem 0.5rem;
       }
       
       .login-logo img {
@@ -296,27 +311,15 @@
       }
       
       .form-control {
-        /* Mantendo boa usabilidade em telas pequenas */
-        padding: 0.75rem 0;
+        padding: 0.75rem;
       }
     }
 
-    /* Adicionando media query para landscape mobile */
+    /* Layout landscape para mobile */
     @media (max-width: 768px) and (orientation: landscape) {
-      .login-wrapper {
-        flex-direction: row-reverse;
-      }
-      
       .left-panel {
-        width: 60%;
-        order: 1;
         min-height: 100vh;
-      }
-      
-      .right-panel {
-        width: 40%;
-        height: 100vh;
-        order: 2;
+        margin: 1rem;
       }
     }
   </style>
@@ -390,7 +393,7 @@
     document.addEventListener('DOMContentLoaded', function() {
       const loginForm = document.getElementById('login-form');
       const registerForm = document.getElementById('register-form');
-      const showRegisterLinks = document.querySelectorAll('#show-register, #link-show-register');
+      const showRegisterLinks = document.querySelectorAll('#link-show-register');
       const showLoginLink = document.getElementById('link-show-login');
       showRegisterLinks.forEach(link => {
         link.addEventListener('click', function(e) {
