@@ -1617,7 +1617,7 @@ body {
 @media (max-width: 480px) {
   .chatbot-window {
     width: calc(100vw - 30px);
-    height: 420px;
+    height: 700px;
     right: 15px;
   }
   .chatbot-toggle {
