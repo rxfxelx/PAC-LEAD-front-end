@@ -45,7 +45,8 @@
     <nav class="main-header navbar navbar-expand navbar-dark">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+          <!-- Adicionando id para controle JavaScript -->
+          <a class="nav-link" id="sidebar-toggle" href="#" role="button">
             <i class="fas fa-bars"></i>
           </a>
         </li>
@@ -57,6 +58,9 @@
       </div>
     </nav>
 
+    <!-- Adicionando overlay para fechar menu mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
     <!-- Sidebar melhorado para responsividade -->
     <aside class="main-sidebar sidebar-dark-primary elevation-2">
       <div class="sidebar-brand">
@@ -66,37 +70,38 @@
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="showSection('analysis')">
+              <!-- Adicionando classe mobile-nav-link para fechar menu após clique -->
+              <a href="#" class="nav-link mobile-nav-link" onclick="showSection('analysis')">
                 <i class="nav-icon fas fa-chart-line"></i>
                 <p>Análise</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="showSection('company')">
+              <a href="#" class="nav-link mobile-nav-link" onclick="showSection('company')">
                 <i class="nav-icon fas fa-building"></i>
                 <p>Empresa</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="showSection('agent-config')">
+              <a href="#" class="nav-link mobile-nav-link" onclick="showSection('agent-config')">
                 <i class="nav-icon fas fa-robot"></i>
                 <p>Agente IA</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="showSection('products')">
+              <a href="#" class="nav-link mobile-nav-link" onclick="showSection('products')">
                 <i class="nav-icon fas fa-boxes"></i>
                 <p>Produtos</p>
               </a>
             </li>
             <li class="nav-item">
-              <a href="#" class="nav-link" onclick="showSection('payments')">
+              <a href="#" class="nav-link mobile-nav-link" onclick="showSection('payments')">
                 <i class="nav-icon fas fa-credit-card"></i>
                 <p>Pagamentos</p>
               </a>
             </li>
             <li class="nav-item logout">
-              <a href="#" class="nav-link" onclick="logout()">
+              <a href="#" class="nav-link mobile-nav-link" onclick="logout()">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
                 <p>Sair</p>
               </a>
@@ -1146,6 +1151,55 @@
   
   <!-- JavaScript Customizado -->
   <script src="script.js"></script>
+
+  <!-- Adicionando JavaScript para controle do menu mobile -->
+  <script>
+    // Controle do menu mobile
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebarToggle = document.getElementById('sidebar-toggle');
+      const sidebarOverlay = document.getElementById('sidebar-overlay');
+      const body = document.body;
+      const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+      // Função para abrir/fechar sidebar
+      function toggleSidebar() {
+        body.classList.toggle('sidebar-open');
+      }
+
+      // Função para fechar sidebar
+      function closeSidebar() {
+        body.classList.remove('sidebar-open');
+      }
+
+      // Event listeners
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function(e) {
+          e.preventDefault();
+          toggleSidebar();
+        });
+      }
+
+      if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+      }
+
+      // Fechar sidebar ao clicar em links de navegação no mobile
+      mobileNavLinks.forEach(link => {
+        link.addEventListener('click', function() {
+          if (window.innerWidth <= 991.98) {
+            setTimeout(closeSidebar, 100);
+          }
+        });
+      });
+
+      // Fechar sidebar ao redimensionar para desktop
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 991.98) {
+          closeSidebar();
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>
