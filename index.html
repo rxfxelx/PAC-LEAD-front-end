@@ -58,48 +58,64 @@
         </li>
       </ul>
       
-      <div class="navbar-nav ml-auto">
-        <a href="#" class="navbar-brand-link">
-          <img src="logoprincipal.png" alt="Helsen IA" class="navbar-brand-image">
-        </a>
-      </div>
+      <!-- Espaço reservado no navbar à direita (antes havia uma logomarca aqui, agora removida
+           para evitar duplicação da logo. A logomarca passa a ser exibida apenas na barra
+           lateral). -->
+      
     </nav>
 
     <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-2">
+      <!-- Marca da barra lateral com logo maior -->
+      <div class="sidebar-brand">
         <img src="logoprincipal.png" alt="Helsen IA" class="brand-image">
-        <span class="brand-text">Helsen IA</span>
-      </a>
-
+      </div>
       <div class="sidebar">
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-            <li class="nav-item">
-              <a href="#" class="nav-link active" onclick="showSection('agent-config')">
-                <i class="nav-icon fas fa-robot"></i>
-                <p>Meu Agente IA</p>
-              </a>
-            </li>
+            <!-- Análise -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('analysis')">
                 <i class="nav-icon fas fa-chart-line"></i>
                 <p>Análise</p>
               </a>
             </li>
+            <!-- Empresa -->
+            <li class="nav-item">
+              <a href="#" class="nav-link" onclick="showSection('company')">
+                <i class="nav-icon fas fa-building"></i>
+                <p>Empresa</p>
+              </a>
+            </li>
+            <!-- Agente IA -->
+            <li class="nav-item">
+              <a href="#" class="nav-link" onclick="showSection('agent-config')">
+                <i class="nav-icon fas fa-robot"></i>
+                <p>Agente IA</p>
+              </a>
+            </li>
+            <!-- Produtos -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('products')">
                 <i class="nav-icon fas fa-boxes"></i>
                 <p>Produtos</p>
               </a>
             </li>
+            <!-- Usuários -->
+            <li class="nav-item">
+              <a href="#" class="nav-link" onclick="showSection('users')">
+                <i class="nav-icon fas fa-users"></i>
+                <p>Usuários</p>
+              </a>
+            </li>
+            <!-- Pagamentos -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('payments')">
                 <i class="nav-icon fas fa-credit-card"></i>
                 <p>Pagamentos</p>
               </a>
             </li>
-
-            <!-- Item de saída, fixado ao final da navegação -->
+            <!-- Item de saída -->
             <li class="nav-item logout">
               <a href="#" class="nav-link" onclick="logout()">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
@@ -118,13 +134,10 @@
           <!-- Seção Meu Agente IA -->
           <div id="agent-config" class="content-section">
             <div class="content-header">
-              <div class="header-info">
-                <img src="logoprincipal.png" class="header-logo" alt="Helsen IA Logo">
-                <div class="header-text">
-                  <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
-                  <h1 class="page-title"><i class="fas fa-robot mr-2"></i> Meu Agente IA</h1>
-                  <p class="page-subtitle">Configure seu agente de IA personalizado</p>
-                </div>
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-robot mr-2"></i> Agente IA</h1>
+                <p class="page-subtitle">Configure seu agente de IA personalizado</p>
               </div>
             </div>
 
@@ -384,13 +397,10 @@
           <!-- Seção Análise -->
           <div id="analysis" class="content-section" style="display: none;">
             <div class="content-header">
-              <div class="header-info">
-                <img src="logoprincipal.png" class="header-logo" alt="Helsen IA Logo">
-                <div class="header-text">
-                  <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
-                  <h1 class="page-title"><i class="fas fa-chart-line mr-2"></i> Análise de Performance</h1>
-                  <p class="page-subtitle">Acompanhe o desempenho do seu agente de IA</p>
-                </div>
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-chart-line mr-2"></i> Análise de Performance</h1>
+                <p class="page-subtitle">Acompanhe o desempenho do seu agente de IA</p>
               </div>
             </div>
             
@@ -496,13 +506,10 @@
           <!-- Seção Produtos -->
           <div id="products" class="content-section" style="display: none;">
             <div class="content-header">
-              <div class="header-info">
-                <img src="logoprincipal.png" class="header-logo" alt="Helsen IA Logo">
-                <div class="header-text">
-                  <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
-                  <h1 class="page-title"><i class="fas fa-boxes mr-2"></i> Gestão de Produtos</h1>
-                  <p class="page-subtitle">Gerencie o catálogo de produtos do seu agente</p>
-                </div>
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-boxes mr-2"></i> Gestão de Produtos</h1>
+                <p class="page-subtitle">Gerencie o catálogo de produtos do seu agente</p>
               </div>
             </div>
             
@@ -544,13 +551,10 @@
           <!-- Seção Pagamentos -->
           <div id="payments" class="content-section" style="display: none;">
             <div class="content-header">
-              <div class="header-info">
-                <img src="logoprincipal.png" class="header-logo" alt="Helsen IA Logo">
-                <div class="header-text">
-                  <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
-                  <h1 class="page-title"><i class="fas fa-credit-card mr-2"></i> Pagamentos e Assinatura</h1>
-                  <p class="page-subtitle">Gerencie sua assinatura e métodos de pagamento</p>
-                </div>
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-credit-card mr-2"></i> Pagamentos e Assinatura</h1>
+                <p class="page-subtitle">Gerencie sua assinatura e métodos de pagamento</p>
               </div>
             </div>
 
@@ -910,6 +914,37 @@
   </div>
 
   <!-- Modal Adicionar Produto -->
+          <!-- Seção Empresa -->
+          <div id="company" class="content-section" style="display: none;">
+            <div class="content-header">
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-building mr-2"></i> Empresa</h1>
+                <p class="page-subtitle">Informações da empresa</p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <p>Dados da empresa ainda não disponíveis.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seção Usuários -->
+          <div id="users" class="content-section" style="display: none;">
+            <div class="content-header">
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-users mr-2"></i> Usuários</h1>
+                <p class="page-subtitle">Gerencie os usuários da sua organização</p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <p>Gestão de usuários em breve.</p>
+              </div>
+            </div>
+          </div>
   <div class="modal fade" id="addProductModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
