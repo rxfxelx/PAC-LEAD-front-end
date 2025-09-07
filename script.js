@@ -11,14 +11,36 @@ const tabs = ['perfil', 'comportamento', 'conversa-ativacao'];
 const BACKEND_BASE = (window.__BACKEND_URL__ || 'https://pac-lead-production.up.railway.app').replace(/\/+$/, '');
 const VISION_UPLOAD_URL = BACKEND_BASE + '/api/vision/upload';
 
-// Define cabeçalhos padrão utilizados em todas as chamadas à API. Ajuste os
-// valores de organização e fluxo conforme necessário. Esses valores devem
-// corresponder aos registros existentes no banco de dados do backend.
-const defaultHeaders = {
-  'Content-Type': 'application/json',
-  'X-Org-ID': '1',
-  'X-Flow-ID': '1'
-};
+// Define cabeçalhos padrão utilizados em todas as chamadas à API.
+// Os valores de organização e fluxo, bem como o token JWT, são lidos do
+// localStorage para que reflitam o usuário autenticado. Se não houver
+// valores armazenados (por exemplo, antes do login), os cabeçalhos de
+// org e flow são definidos como "1". A chave Authorization só é
+// enviada quando um token válido existir.
+const defaultHeaders = (() => {
+  let orgId = '1';
+  let flowId = '1';
+  let authHeader;
+  try {
+    const storedOrg = localStorage.getItem('org_id');
+    const storedFlow = localStorage.getItem('flow_id');
+    const token = localStorage.getItem('token');
+    if (storedOrg) orgId = storedOrg;
+    if (storedFlow) flowId = storedFlow;
+    if (token) authHeader = `Bearer ${token}`;
+  } catch (err) {
+    // Se localStorage não estiver acessível, permanecem os valores padrões.
+  }
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Org-ID': orgId,
+    'X-Flow-ID': flowId
+  };
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
+  }
+  return headers;
+})();
 
 // ==== Funções de integração com o backend ====
 
