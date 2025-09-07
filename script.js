@@ -5,8 +5,151 @@ let currentTab = 0;
 const tabs = ['perfil', 'comportamento', 'conversa-ativacao'];
 
 // ===== BACKEND URLs =====
-const BACKEND_BASE = 'https://paclead-chat-backend-production.up.railway.app'.replace(/\/+$/,'');
+// Define a base de backend a partir de uma variável global se disponível. Caso
+// contrário, use a instância de produção do Pac‑Lead. Remove barras
+// consecutivas no final para evitar double-slash nas requisições.
+const BACKEND_BASE = (window.__BACKEND_URL__ || 'https://pac-lead-production.up.railway.app').replace(/\/+$/, '');
 const VISION_UPLOAD_URL = BACKEND_BASE + '/api/vision/upload';
+
+// Define cabeçalhos padrão utilizados em todas as chamadas à API. Ajuste os
+// valores de organização e fluxo conforme necessário. Esses valores devem
+// corresponder aos registros existentes no banco de dados do backend.
+const defaultHeaders = {
+  'Content-Type': 'application/json',
+  'X-Org-ID': '1',
+  'X-Flow-ID': '1'
+};
+
+// ==== Funções de integração com o backend ====
+
+// Recupera a lista de produtos do backend e preenche a variável global `products`.
+// Em seguida atualiza a tabela. Em caso de erro, mantém os produtos atuais.
+async function fetchProducts() {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/products`, { headers: defaultHeaders });
+    if (!res.ok) throw new Error('Falha ao listar produtos');
+    const data = await res.json();
+    products = data.items.map(p => ({
+      id: p.id,
+      name: p.title,
+      description: p.slug || '',
+      category: 'Sem categoria',
+      price: 0,
+      image: null
+    }));
+    updateProductTable();
+  } catch (err) {
+    console.error(err);
+    updateProductTable();
+  }
+}
+
+// Cria um novo produto no backend. Recebe um objeto contendo `name` e
+// opcionalmente `description`. Retorna o objeto criado ou `null` em caso de
+// falha.
+async function createProductOnBackend(product) {
+  try {
+    const payload = {
+      org_id: Number(defaultHeaders['X-Org-ID']),
+      flow_id: Number(defaultHeaders['X-Flow-ID']),
+      title: product.name,
+      slug: product.description,
+      status: 'active'
+    };
+    const res = await fetch(`${BACKEND_BASE}/api/products`, {
+      method: 'POST',
+      headers: defaultHeaders,
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Falha ao criar produto');
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+// Remove um produto no backend. Retorna `true` se a operação foi bem sucedida.
+async function deleteProductOnBackend(id) {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/products/${id}`, {
+      method: 'DELETE',
+      headers: defaultHeaders
+    });
+    if (!res.ok) throw new Error('Falha ao remover produto');
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+// Busca o resumo analítico (conversas, leads, vendas, taxa de conversão,
+// leads recuperados, melhor horário, produto mais falado) no backend.
+async function fetchAnalyticsSummary() {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/analytics/summary`, {
+      headers: defaultHeaders
+    });
+    if (!res.ok) throw new Error('Falha ao buscar resumo analítico');
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+// Busca os produtos mais vendidos (top produtos) no backend.
+async function fetchTopProducts() {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/analytics/top-products`, {
+      headers: defaultHeaders
+    });
+    if (!res.ok) throw new Error('Falha ao buscar top produtos');
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+// Busca dados de vendas por hora para alimentar o gráfico de performance.
+async function fetchSalesByHour() {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/analytics/sales-by-hour`, {
+      headers: defaultHeaders
+    });
+    if (!res.ok) throw new Error('Falha ao buscar vendas por hora');
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+// Carrega as métricas e gráficos da tela de análise. Atualiza os elementos da
+// interface com base nos dados recebidos do backend.
+async function loadAnalytics() {
+  const summary = await fetchAnalyticsSummary();
+  if (summary) {
+    const convEl = document.getElementById('conversations-count');
+    const leadsEl = document.getElementById('leads-count');
+    const salesEl = document.getElementById('sales-count');
+    const convRateEl = document.getElementById('conversion-rate');
+    if (convEl) convEl.textContent = summary.conversations;
+    if (leadsEl) leadsEl.textContent = summary.leads;
+    if (salesEl) salesEl.textContent = summary.sales;
+    if (convRateEl) convRateEl.textContent = (summary.conversion_rate || 0).toFixed(1) + '%';
+    const recoveredEl = document.getElementById('recovered-leads-value');
+    const timeEl = document.getElementById('best-time-range');
+    const topProductEl = document.getElementById('top-product-name');
+    if (recoveredEl) recoveredEl.textContent = summary.recovered_leads;
+    if (timeEl) timeEl.textContent = summary.best_time_range;
+    if (topProductEl) topProductEl.textContent = summary.top_product;
+  }
+  // atualiza o gráfico
+  await createPerformanceChart();
+}
 
 // ===== DADOS EXEMPLO =====
 const sampleData = {
@@ -193,7 +336,7 @@ function filterTable(modalId, searchTerm) {
 }
 
 // ===== PRODUTOS =====
-function addProduct() {
+async function addProduct() {
   const form = document.getElementById("product-form");
   const imgFile = form.querySelector("#product-image").files[0];
   const name = form.querySelector("#product-name").value.trim();
@@ -211,10 +354,15 @@ function addProduct() {
     description, image: imgFile ? URL.createObjectURL(imgFile) : null
   };
 
-  products.push(product);
-  updateProductTable();
+  // Envia o produto ao backend
+  const created = await createProductOnBackend(product);
+  if (created) {
+    showNotification("Produto adicionado com sucesso!", "success");
+  } else {
+    showNotification("Erro ao adicionar produto.", "danger");
+  }
   form.reset();
-  showNotification("Produto adicionado com sucesso!", "success");
+  await fetchProducts();
 }
 function updateProductTable() {
   const tbody = document.getElementById("product-list");
@@ -250,11 +398,15 @@ function updateProductTable() {
     </tr>
   `).join("");
 }
-function removeProduct(productId) {
+async function removeProduct(productId) {
   if (confirm("Tem certeza que deseja remover este produto?")) {
-    products = products.filter(product => product.id !== productId);
-    updateProductTable();
-    showNotification("Produto removido com sucesso!", "info");
+    const ok = await deleteProductOnBackend(productId);
+    if (ok) {
+      showNotification("Produto removido com sucesso!", "info");
+    } else {
+      showNotification("Erro ao remover produto.", "danger");
+    }
+    await fetchProducts();
   }
 }
 
@@ -287,37 +439,107 @@ function getNotificationIcon(type) {
 }
 
 // ===== GRÁFICO =====
-function createPerformanceChart() {
+async function createPerformanceChart() {
   const ctx = document.getElementById("performanceChart");
   if (!ctx) return;
   if (chartInstance) chartInstance.destroy();
+  // tenta carregar dados reais de vendas por hora. Caso falhe, usa dados de exemplo.
+  let labels = [];
+  let conversions = [];
+  let leadsData = [];
+  try {
+    const res = await fetchSalesByHour();
+    if (res && Array.isArray(res.items) && res.items.length > 0) {
+      labels = res.items.map(item => {
+        const d = new Date(item.t);
+        // exibe dia/mês e hora:minuto
+        return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      });
+      conversions = res.items.map(item => Number(item.c));
+      // gera um valor aproximado de leads proporcional às conversões
+      leadsData = conversions.map(c => Math.round(c * 1.5));
+    } else {
+      // fallback para dados de exemplo
+      labels = ["Semana 1","Semana 2","Semana 3","Semana 4","Semana 5","Semana 6"];
+      conversions = [12,19,8,15,22,18];
+      leadsData = [8,12,15,10,18,14];
+    }
+  } catch (err) {
+    console.error(err);
+    labels = ["Semana 1","Semana 2","Semana 3","Semana 4","Semana 5","Semana 6"];
+    conversions = [12,19,8,15,22,18];
+    leadsData = [8,12,15,10,18,14];
+  }
   chartInstance = new Chart(ctx, {
     type: "line",
     data: {
-      labels: ["Semana 1", "Semana 2", "Semana 3", "Semana 4", "Semana 5", "Semana 6"],
+      labels: labels,
       datasets: [
-        { label: "Conversões", data: [12, 19, 8, 15, 22, 18],
-          borderColor: "#007bff", backgroundColor: "rgba(0, 123, 255, 0.1)", borderWidth: 3,
-          fill: true, tension: 0.4, pointBackgroundColor: "#007bff", pointBorderColor: "#ffffff",
-          pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8 },
-        { label: "Leads", data: [8, 12, 15, 10, 18, 14],
-          borderColor: "#28a745", backgroundColor: "rgba(40, 167, 69, 0.1)", borderWidth: 3,
-          fill: true, tension: 0.4, pointBackgroundColor: "#28a745", pointBorderColor: "#ffffff",
-          pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }
+        {
+          label: "Conversões",
+          data: conversions,
+          borderColor: "#007bff",
+          backgroundColor: "rgba(0, 123, 255, 0.1)",
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: "#007bff",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        },
+        {
+          label: "Leads",
+          data: leadsData,
+          borderColor: "#28a745",
+          backgroundColor: "rgba(40, 167, 69, 0.1)",
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: "#28a745",
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 2,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }
       ]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: {
-        legend: { position: "top", labels: { usePointStyle: true, padding: 20, font: { family: "Inter", size: 12 }, color: "#ffffff" } },
+        legend: {
+          position: "top",
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: { family: "Inter", size: 12 },
+            color: "#ffffff"
+          }
+        },
         tooltip: {
-          backgroundColor: "rgba(0, 0, 0, 0.8)", titleColor: "#ffffff", bodyColor: "#ffffff",
-          borderColor: "#007bff", borderWidth: 1, cornerRadius: 8, displayColors: true, intersect: false, mode: "index"
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
+          titleColor: "#ffffff",
+          bodyColor: "#ffffff",
+          borderColor: "#007bff",
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: true,
+          intersect: false,
+          mode: "index"
         }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { family: "Inter", size: 11 }, color: "#a0a0a0" } },
-        y: { beginAtZero: true, grid: { color: "rgba(255, 255, 255, 0.1)" }, ticks: { font: { family: "Inter", size: 11 }, color: "#a0a0a0" } }
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: "Inter", size: 11 }, color: "#a0a0a0" }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: "rgba(255, 255, 255, 0.1)" },
+          ticks: { font: { family: "Inter", size: 11 }, color: "#a0a0a0" }
+        }
       },
       interaction: { intersect: false, mode: "index" },
       elements: { point: { hoverBackgroundColor: "#ffffff" } }
@@ -339,7 +561,13 @@ document.addEventListener('DOMContentLoaded', function() {
   document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal')) closeMetricModal(e.target.id);
   });
-  if (document.getElementById('analysis').style.display !== 'none') createPerformanceChart();
+  if (document.getElementById('analysis').style.display !== 'none') {
+    // se a seção de análise estiver visível, carrega o gráfico imediatamente
+    createPerformanceChart();
+  }
+  // Carrega dados iniciais de produtos e métricas
+  fetchProducts();
+  loadAnalytics();
   console.log('Sistema Helsen IA inicializado com sucesso!');
 });
 
