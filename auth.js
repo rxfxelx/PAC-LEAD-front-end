@@ -83,6 +83,17 @@
     localStorage.setItem('token', token);
     localStorage.setItem('org_id', String(extractOrg(data)));
     localStorage.setItem('flow_id', String(extractFlow(data)));
+    // Armazena também o nome do usuário (se fornecido) para exibir mensagens de saudação
+    try {
+      const extractName = (d) =>
+        d.name || d.username || (d.user && (d.user.name || d.user.username || d.user.email)) || '';
+      const userName = extractName(data);
+      if (userName) {
+        localStorage.setItem('user_name', userName);
+      }
+    } catch (_) {
+      // Ignora erros de armazenamento do nome
+    }
   };
 
   /**
