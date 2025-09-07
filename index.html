@@ -364,7 +364,7 @@
               <div class="col-lg-3 col-md-6 col-12">
                 <div class="metric-card clickable-card" id="conversations-card" onclick="openMetricModal('conversations-modal')">
                   <div class="metric-content">
-                    <div class="metric-number">1,247</div>
+                    <div class="metric-number" id="conversations-count">1,247</div>
                     <div class="metric-label">Conversas Totais</div>
                   </div>
                   <div class="metric-icon">
@@ -375,7 +375,7 @@
               <div class="col-lg-3 col-md-6 col-12">
                 <div class="metric-card clickable-card" id="leads-card" onclick="openMetricModal('leads-modal')">
                   <div class="metric-content">
-                    <div class="metric-number">342</div>
+                    <div class="metric-number" id="leads-count">342</div>
                     <div class="metric-label">Leads</div>
                   </div>
                   <div class="metric-icon">
@@ -386,7 +386,7 @@
               <div class="col-lg-3 col-md-6 col-12">
                 <div class="metric-card clickable-card" id="sales-card" onclick="openMetricModal('sales-modal')">
                   <div class="metric-content">
-                    <div class="metric-number">89</div>
+                    <div class="metric-number" id="sales-count">89</div>
                     <div class="metric-label">Vendas Realizadas</div>
                   </div>
                   <div class="metric-icon">
@@ -397,7 +397,7 @@
               <div class="col-lg-3 col-md-6 col-12">
                 <div class="metric-card clickable-card" id="satisfaction-card" onclick="openMetricModal('satisfaction-modal')">
                   <div class="metric-content">
-                    <div class="metric-number">87%</div>
+                    <div class="metric-number" id="conversion-rate">87%</div>
                     <div class="metric-label">Taxa de Conversão</div>
                   </div>
                   <div class="metric-icon">
@@ -416,7 +416,7 @@
                   </div>
                   <div class="info-content">
                     <div class="info-label">Leads Recuperados</div>
-                    <div class="info-value">892</div>
+                    <div class="info-value" id="recovered-leads-value">892</div>
                   </div>
                 </div>
               </div>
@@ -427,7 +427,7 @@
                   </div>
                   <div class="info-content">
                     <div class="info-label">Horário de Conversão</div>
-                    <div class="info-value">19:00-20:00</div>
+                    <div class="info-value" id="best-time-range">19:00-20:00</div>
                   </div>
                 </div>
               </div>
@@ -438,7 +438,7 @@
                   </div>
                   <div class="info-content">
                     <div class="info-label">Produto mais falado</div>
-                    <div class="info-value">Pac Lead</div>
+                    <div class="info-value" id="top-product-name">Pac Lead</div>
                   </div>
                 </div>
               </div>
@@ -495,58 +495,7 @@
                       </tr>
                     </thead>
                     <tbody id="product-list">
-                      <tr>
-                        <td>
-                          <img src="https://via.placeholder.com/60x60/007bff/ffffff?text=P1" alt="Produto 1">
-                        </td>
-                        <td>
-                          <strong>Smartphone XYZ</strong><br>
-                          <small class="text-muted">Smartphone de última geração</small>
-                        </td>
-                        <td>
-                          <span class="badge badge-primary">Eletrônicos</span>
-                        </td>
-                        <td>
-                          <span class="price-tag">R$ 1.299,00</span>
-                        </td>
-                        <td>
-                          <span class="badge badge-success">Ativo</span>
-                        </td>
-                        <td>
-                          <button class="btn btn-sm btn-outline-primary" title="Editar">
-                            <i class="fas fa-edit"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-danger" title="Remover">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <img src="https://via.placeholder.com/60x60/28a745/ffffff?text=P2" alt="Produto 2">
-                        </td>
-                        <td>
-                          <strong>Fone de Ouvido ABC</strong><br>
-                          <small class="text-muted">Fone wireless com cancelamento de ruído</small>
-                        </td>
-                        <td>
-                          <span class="badge badge-primary">Eletrônicos</span>
-                        </td>
-                        <td>
-                          <span class="price-tag">R$ 349,00</span>
-                        </td>
-                        <td>
-                          <span class="badge badge-success">Ativo</span>
-                        </td>
-                        <td>
-                          <button class="btn btn-sm btn-outline-primary" title="Editar">
-                            <i class="fas fa-edit"></i>
-                          </button>
-                          <button class="btn btn-sm btn-outline-danger" title="Remover">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
+                      <!-- As linhas de produtos serão geradas dinamicamente via script.js -->
                     </tbody>
                   </table>
                 </div>
