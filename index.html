@@ -23,9 +23,7 @@
   <!-- CSS Customizado -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Se o usuário não estiver autenticado, redireciona para a página de login.
-       Este script verifica a existência de um token JWT no localStorage. Se não
-       houver token, o usuário é enviado imediatamente para login.html.  -->
+  <!-- Melhorada verificação de autenticação para mobile -->
   <script>
     (function() {
       try {
@@ -38,17 +36,12 @@
       }
     })();
   </script>
-
-  <!-- A verificação de autenticação foi movida para dentro do corpo da página.
-       Agora usamos um overlay de login integrado ao dashboard em vez de uma
-       página separada. O JavaScript no fim do arquivo controla sua
-       visibilidade. -->
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
   <div class="wrapper">
     
-    <!-- Navbar -->
+    <!-- Navbar melhorado para mobile -->
     <nav class="main-header navbar navbar-expand navbar-dark">
       <ul class="navbar-nav">
         <li class="nav-item">
@@ -58,57 +51,50 @@
         </li>
       </ul>
       
-      <!-- Espaço reservado no navbar à direita (antes havia uma logomarca aqui, agora removida
-           para evitar duplicação da logo. A logomarca passa a ser exibida apenas na barra
-           lateral). -->
-      
+      <!-- Logo mobile no navbar -->
+      <div class="navbar-brand d-block d-lg-none">
+        <img src="logoprincipal.png" alt="Helsen IA" class="navbar-brand-image">
+      </div>
     </nav>
 
-    <!-- Sidebar -->
+    <!-- Sidebar melhorado para responsividade -->
     <aside class="main-sidebar sidebar-dark-primary elevation-2">
-      <!-- Marca da barra lateral com logo maior -->
       <div class="sidebar-brand">
         <img src="logoprincipal.png" alt="Helsen IA" class="brand-image">
       </div>
       <div class="sidebar">
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-            <!-- Análise -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('analysis')">
                 <i class="nav-icon fas fa-chart-line"></i>
                 <p>Análise</p>
               </a>
             </li>
-            <!-- Empresa -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('company')">
                 <i class="nav-icon fas fa-building"></i>
                 <p>Empresa</p>
               </a>
             </li>
-            <!-- Agente IA -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('agent-config')">
                 <i class="nav-icon fas fa-robot"></i>
                 <p>Agente IA</p>
               </a>
             </li>
-            <!-- Produtos -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('products')">
                 <i class="nav-icon fas fa-boxes"></i>
                 <p>Produtos</p>
               </a>
             </li>
-            <!-- Pagamentos -->
             <li class="nav-item">
               <a href="#" class="nav-link" onclick="showSection('payments')">
                 <i class="nav-icon fas fa-credit-card"></i>
                 <p>Pagamentos</p>
               </a>
             </li>
-            <!-- Item de saída -->
             <li class="nav-item logout">
               <a href="#" class="nav-link" onclick="logout()">
                 <i class="nav-icon fas fa-sign-out-alt"></i>
@@ -134,21 +120,24 @@
               </div>
             </div>
 
-            <!-- Navegação por abas -->
-            <ul class="nav nav-tabs" id="agentTabs" role="tablist">
+            <!-- Navegação por abas responsiva -->
+            <ul class="nav nav-tabs nav-tabs-responsive" id="agentTabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="perfil-tab" data-bs-toggle="tab" data-bs-target="#perfil" type="button" role="tab">
-                  Perfil
+                  <i class="fas fa-user d-lg-none"></i>
+                  <span class="d-none d-lg-inline">Perfil</span>
                 </button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="comportamento-tab" data-bs-toggle="tab" data-bs-target="#comportamento" type="button" role="tab">
-                  Comportamento
+                  <i class="fas fa-cogs d-lg-none"></i>
+                  <span class="d-none d-lg-inline">Comportamento</span>
                 </button>
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="conversa-ativacao-tab" data-bs-toggle="tab" data-bs-target="#conversa-ativacao" type="button" role="tab">
-                  Conversa & Ativação
+                  <i class="fas fa-comments d-lg-none"></i>
+                  <span class="d-none d-lg-inline">Conversa & Ativação</span>
                 </button>
               </li>
             </ul>
@@ -159,8 +148,9 @@
                 <div class="card">
                   <div class="card-body">
                     <form id="agent-config-form">
-                      <div class="row">
-                        <div class="col-md-6">
+                      <!-- Grid responsivo melhorado -->
+                      <div class="row g-3">
+                        <div class="col-12 col-md-6">
                           <div class="form-group">
                             <label for="agent-avatar" class="form-label">
                               <i class="fas fa-user-circle mr-2"></i>
@@ -170,7 +160,7 @@
                             <small class="form-text">Formatos aceitos: JPG, PNG, GIF (máx. 2MB)</small>
                           </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                           <div class="form-group">
                             <label for="agent-name" class="form-label">
                               <i class="fas fa-signature mr-2"></i>
@@ -181,8 +171,8 @@
                         </div>
                       </div>
 
-                      <div class="row">
-                        <div class="col-md-6">
+                      <div class="row g-3">
+                        <div class="col-12 col-md-6">
                           <div class="form-group">
                             <label for="communication-style" class="form-label">
                               <i class="fas fa-comments mr-2"></i>
@@ -196,7 +186,7 @@
                             </select>
                           </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                           <div class="form-group">
                             <label for="agent-sector" class="form-label">
                               <i class="fas fa-industry mr-2"></i>
@@ -247,7 +237,8 @@
                   </div>
                 </div>
 
-                <div class="form-actions d-flex justify-content-between">
+                <!-- Botões de navegação responsivos -->
+                <div class="form-actions d-flex flex-column flex-md-row justify-content-between gap-2">
                   <button type="button" class="btn btn-outline-secondary" onclick="previousTab()" disabled>
                     <i class="fas fa-arrow-left mr-2"></i>
                     Anterior
@@ -319,7 +310,7 @@
                   </div>
                 </div>
 
-                <div class="form-actions d-flex justify-content-between">
+                <div class="form-actions d-flex flex-column flex-md-row justify-content-between gap-2">
                   <button type="button" class="btn btn-outline-secondary" onclick="previousTab()">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Anterior
@@ -341,8 +332,9 @@
                     </h3>
                   </div>
                   <div class="card-body">
-                    <div class="row">
-                      <div class="col-md-6">
+                    <!-- Layout responsivo para upload de arquivos -->
+                    <div class="row g-3">
+                      <div class="col-12 col-md-6">
                         <div class="form-group">
                           <label class="form-label">
                             <i class="fas fa-file-pdf mr-2"></i>
@@ -352,7 +344,7 @@
                           <small class="form-text">Nenhum arquivo escolhido</small>
                         </div>
                       </div>
-                      <div class="col-md-6">
+                      <div class="col-12 col-md-6">
                         <div class="form-group">
                           <label class="form-label">
                             <i class="fas fa-question-circle mr-2"></i>
@@ -373,7 +365,7 @@
                   </div>
                 </div>
 
-                <div class="form-actions d-flex justify-content-between">
+                <div class="form-actions d-flex flex-column flex-md-row justify-content-between gap-2">
                   <button type="button" class="btn btn-outline-secondary" onclick="previousTab()">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Anterior
@@ -397,9 +389,9 @@
               </div>
             </div>
             
-            <!-- Métricas principais -->
-            <div class="row main-metrics-row">
-              <div class="col-lg-3 col-md-6 col-12">
+            <!-- Métricas principais com melhor responsividade -->
+            <div class="row main-metrics-row g-3">
+              <div class="col-12 col-sm-6 col-lg-3">
                 <div class="metric-card clickable-card" id="conversations-card" onclick="openMetricModal('conversations-modal')">
                   <div class="metric-content">
                     <div class="metric-number" id="conversations-count">1,247</div>
@@ -410,7 +402,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-lg-3 col-md-6 col-12">
+              <div class="col-12 col-sm-6 col-lg-3">
                 <div class="metric-card clickable-card" id="leads-card" onclick="openMetricModal('leads-modal')">
                   <div class="metric-content">
                     <div class="metric-number" id="leads-count">342</div>
@@ -421,7 +413,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-lg-3 col-md-6 col-12">
+              <div class="col-12 col-sm-6 col-lg-3">
                 <div class="metric-card clickable-card" id="sales-card" onclick="openMetricModal('sales-modal')">
                   <div class="metric-content">
                     <div class="metric-number" id="sales-count">89</div>
@@ -432,7 +424,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-lg-3 col-md-6 col-12">
+              <div class="col-12 col-sm-6 col-lg-3">
                 <div class="metric-card clickable-card" id="satisfaction-card" onclick="openMetricModal('satisfaction-modal')">
                   <div class="metric-content">
                     <div class="metric-number" id="conversion-rate">87%</div>
@@ -445,9 +437,9 @@
               </div>
             </div>
 
-            <!-- Métricas secundárias -->
-            <div class="row secondary-metrics-row">
-              <div class="col-lg-4 col-md-6 col-12">
+            <!-- Métricas secundárias responsivas -->
+            <div class="row secondary-metrics-row g-3">
+              <div class="col-12 col-md-6 col-lg-4">
                 <div class="info-card">
                   <div class="info-icon bg-primary">
                     <i class="fas fa-users"></i>
@@ -458,7 +450,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-lg-4 col-md-6 col-12">
+              <div class="col-12 col-md-6 col-lg-4">
                 <div class="info-card">
                   <div class="info-icon bg-info">
                     <i class="fas fa-message"></i>
@@ -469,7 +461,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-lg-4 col-md-6 col-12">
+              <div class="col-12 col-md-6 col-lg-4">
                 <div class="info-card">
                   <div class="info-icon bg-success">
                     <i class="fas fa-robot"></i>
@@ -515,20 +507,22 @@
                 <div class="card-tools">
                   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addProductModal">
                     <i class="fas fa-plus mr-1"></i>
-                    Adicionar Produto
+                    <span class="d-none d-sm-inline">Adicionar Produto</span>
+                    <span class="d-sm-none">Adicionar</span>
                   </button>
                 </div>
               </div>
               <div class="card-body p-0">
+                <!-- Tabela responsiva melhorada -->
                 <div class="table-responsive">
                   <table class="table table-striped products-table">
                     <thead>
                       <tr>
-                        <th>Imagem</th>
+                        <th class="d-none d-md-table-cell">Imagem</th>
                         <th>Nome</th>
-                        <th>Categoria</th>
+                        <th class="d-none d-lg-table-cell">Categoria</th>
                         <th>Preço</th>
-                        <th>Status</th>
+                        <th class="d-none d-sm-table-cell">Status</th>
                         <th>Ações</th>
                       </tr>
                     </thead>
@@ -919,27 +913,31 @@
             <div class="card">
               <div class="card-body">
                 <form id="company-form">
+                  <!-- Grid responsivo melhorado para formulário da empresa -->
                   <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                       <label for="company-razao" class="form-label">Razão Social</label>
                       <input type="text" class="form-control" id="company-razao" placeholder="Digite a razão social">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                       <label for="company-fantasia" class="form-label">Nome Fantasia</label>
                       <input type="text" class="form-control" id="company-fantasia" placeholder="Nome fantasia">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-cnpj" class="form-label">CNPJ / CPF</label>
                       <div class="input-group">
                         <input type="text" class="form-control" id="company-cnpj" placeholder="00.000.000/0000-00">
-                        <button class="btn btn-primary" type="button">Buscar CNPJ</button>
+                        <button class="btn btn-primary d-none d-sm-block" type="button">Buscar CNPJ</button>
+                        <button class="btn btn-primary d-sm-none" type="button">
+                          <i class="fas fa-search"></i>
+                        </button>
                       </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-insc" class="form-label">Insc. Estadual</label>
                       <input type="text" class="form-control" id="company-insc" placeholder="Isento">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-segment" class="form-label">Segmento</label>
                       <select id="company-segment" class="form-control">
                         <option value="">Selecione...</option>
@@ -948,35 +946,35 @@
                         <option value="servicos">Serviços</option>
                       </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-phone" class="form-label">Telefone de Contato</label>
                       <input type="text" class="form-control" id="company-phone" placeholder="(xx) xxxx‑xxxx">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-email" class="form-label">Email Contato</label>
                       <input type="email" class="form-control" id="company-email" placeholder="contato@empresa.com">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-bairro" class="form-label">Bairro</label>
                       <input type="text" class="form-control" id="company-bairro" placeholder="Bairro">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-12 col-md-6">
                       <label for="company-endereco" class="form-label">Endereço</label>
                       <input type="text" class="form-control" id="company-endereco" placeholder="Rua, Avenida...">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2">
                       <label for="company-numero" class="form-label">Número</label>
                       <input type="text" class="form-control" id="company-numero" placeholder="123">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-cep" class="form-label">CEP</label>
                       <input type="text" class="form-control" id="company-cep" placeholder="00000‑000">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-12 col-md-4">
                       <label for="company-cidade" class="form-label">Cidade</label>
                       <input type="text" class="form-control" id="company-cidade" placeholder="Cidade">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-12 col-md-2">
                       <label for="company-uf" class="form-label">Estado (UF)</label>
                       <select id="company-uf" class="form-control">
                         <option value="">UF</option>
@@ -1009,11 +1007,11 @@
                         <option value="TO">TO</option>
                       </select>
                     </div>
-                    <div class="col-md-12 mt-3">
+                    <div class="col-12 mt-3">
                       <label class="form-label">Selecione a Imagem/Logo da Empresa:</label><br>
                       <input type="file" class="form-control" id="company-logo" accept="image/*">
                     </div>
-                    <div class="col-md-12 mt-3">
+                    <div class="col-12 mt-3">
                       <label for="company-observacoes" class="form-label">Observações da Empresa</label>
                       <textarea class="form-control" id="company-observacoes" rows="3" placeholder="Observações adicionais da empresa"></textarea>
                     </div>
@@ -1095,7 +1093,7 @@
     </div>
   </div>
 
-  <!-- Chatbot -->
+  <!-- Chatbot responsivo melhorado -->
   <div id="chatbot-container" class="chatbot-container">
     <div id="chatbot-toggle" class="chatbot-toggle">
       <img src="paclead.png" alt="Chatbot Icon" class="chatbot-icon">
@@ -1127,7 +1125,6 @@
         </div>
       </div>
       
-      <!-- Substituído para incluir envio de imagem -->
       <div class="chatbot-input-container">
         <input type="text" id="chatbot-input" placeholder="Digite sua mensagem..." maxlength="500">
         <input type="file" id="chatbot-image-input" accept="image/*" hidden>
@@ -1138,7 +1135,6 @@
           <i class="fas fa-paper-plane"></i>
         </button>
       </div>
-      <!-- Fim da substituição -->
     </div>
   </div>
 
