@@ -1619,6 +1619,7 @@ body {
     width: calc(100vw - 30px);
     height: 700px;
     right: 15px;
+    left: 3px
   }
   .chatbot-toggle {
     width: 50px;
