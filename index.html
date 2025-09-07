@@ -22,6 +22,27 @@
   
   <!-- CSS Customizado -->
   <link rel="stylesheet" href="style.css">
+
+  <!-- Se o usuário não estiver autenticado, redireciona para a página de login.
+       Este script verifica a existência de um token JWT no localStorage. Se não
+       houver token, o usuário é enviado imediatamente para login.html.  -->
+  <script>
+    (function() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          window.location.href = 'login.html';
+        }
+      } catch (_) {
+        window.location.href = 'login.html';
+      }
+    })();
+  </script>
+
+  <!-- A verificação de autenticação foi movida para dentro do corpo da página.
+       Agora usamos um overlay de login integrado ao dashboard em vez de uma
+       página separada. O JavaScript no fim do arquivo controla sua
+       visibilidade. -->
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -992,5 +1013,6 @@
   
   <!-- JavaScript Customizado -->
   <script src="script.js"></script>
+
 </body>
 </html>
