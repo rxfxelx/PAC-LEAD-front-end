@@ -235,6 +235,45 @@ function showSection(sectionId) {
   const activeLink = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
   if (activeLink) activeLink.classList.add('active');
   if (sectionId === 'analysis') setTimeout(createPerformanceChart, 100);
+
+  // Atualiza a barra de endereços sem recarregar a página para refletir a seção atual.
+  try {
+    const pathMap = {
+      'agent-config': '/agente',
+      'analysis': '/analise',
+      'products': '/produtos',
+      'payments': '/pagamentos'
+    };
+    const newPath = pathMap[sectionId];
+    if (newPath && history.pushState) {
+      history.pushState(null, '', newPath);
+    }
+  } catch (_) {
+    // falha silenciosa caso o histórico não seja suportado
+  }
+}
+
+// Atualiza todas as ocorrências de saudação com o nome do usuário
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    const name = (localStorage.getItem('user_name') || '').toUpperCase();
+    document.querySelectorAll('.user-name').forEach(el => {
+      el.textContent = name;
+    });
+  } catch (_) {
+    // ignora erros de leitura do localStorage
+  }
+});
+
+// Função de logout: limpa dados do usuário e redireciona para a página de login
+function logout() {
+  try {
+    localStorage.removeItem('token');
+    localStorage.removeItem('org_id');
+    localStorage.removeItem('flow_id');
+    localStorage.removeItem('user_name');
+  } catch (_) {}
+  window.location.href = 'login.html';
 }
 
 // ===== ABAS =====
