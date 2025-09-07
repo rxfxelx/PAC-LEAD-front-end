@@ -36,67 +36,63 @@
       background: linear-gradient(135deg, #0f1c3f 0%, #171e48 35%, #2d0e3e 100%);
       overflow: hidden;
     }
-    /* Estrutura principal: duas colunas */
+    /* Estrutura principal: duas colunas em tela cheia. O wrapper ocupa toda a
+       largura e altura da viewport, sem borda arredondada ou sombra. A ordem
+       dos filhos é invertida para exibir a imagem à esquerda e o formulário
+       de login à direita. */
     .login-wrapper {
       display: flex;
-      width: 90%;
-      max-width: 900px;
-      min-height: 60vh;
-      border-radius: 16px;
+      flex-direction: row-reverse; /* inverte a ordem: imagem à esquerda */
+      /* Ajustamos o tamanho do painel para deixá‑lo ainda mais amplo, mas
+         sem ocupar toda a viewport. A largura agora usa 96% da tela com
+         um limite máximo maior e a altura foi ampliada para 90% da
+         viewport, garantindo mais espaço para a imagem e formulários. */
+      width: 96%;
+      max-width: 1400px;
+      height: 90vh;
+      min-height: 80vh;
+      border-radius: 25px;
       overflow: hidden;
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
     }
-    /* Painel esquerdo: card com o formulário */
+    /* Painel de formulário (direito) */
     .left-panel {
-      width: 45%;
-      padding: 3rem 3rem;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(12px);
+      width: 50%;
+      padding: 3rem;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
       color: #fff;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
+    /* Painel de imagem (esquerdo) */
     .right-panel {
-      flex: 1;
+      width: 50%;
       position: relative;
       overflow: hidden;
       background: #101c3b;
     }
     /* Cria formas abstratas usando gradientes radiais para simular ondas fluidas */
+    /* Removemos os gradientes abstratos para um design mais limpo. */
     .right-panel::before,
     .right-panel::after {
-      content: "";
-      position: absolute;
-      width: 200%;
-      height: 200%;
-      border-radius: 50%;
-      z-index: 1;
-    }
-    .right-panel::before {
-      top: -30%;
-      left: -60%;
-      background: radial-gradient(circle at center, rgba(0, 115, 230, 0.7), transparent 70%);
-      transform: rotate(-25deg);
-    }
-    .right-panel::after {
-      bottom: -30%;
-      right: -60%;
-      background: radial-gradient(circle at center, rgba(175, 0, 255, 0.7), transparent 70%);
-      transform: rotate(25deg);
+      display: none;
     }
 
     /* A imagem decorativa posicionada sobre o painel direito. Ajuste a proporção conforme necessário. */
     .right-panel img {
+      /* Centraliza a imagem dentro do painel e preserva suas proporções. */
       position: absolute;
       top: 50%;
-      left: 110%;
+      left: 50%;
       transform: translate(-50%, -50%);
-      width: 2900%;
+      max-width: 90%;
+      max-height: 90%;
+      width: auto;
       height: auto;
-      max-height: 100%;
       object-fit: contain;
-      z-index: 2;
+      z-index: 1;
     }
     .login-logo img {
       height: 150px;
