@@ -62,7 +62,7 @@ body {
   /* A logomarca exibida na barra lateral deve ser maior para acompanhar
      o novo layout. Ajustamos a altura e removemos margens laterais para
      centralizar o ícone dentro de sua área. */
-  height: 80px;
+  height: 150px;
   width: auto;
   margin: var(--spacing-md) auto;
 }
@@ -73,7 +73,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-lg) 0;
+  padding: 0.2rem
 }
 .brand-text { font-weight:600; font-size:1.1rem; color:var(--text-primary); }
 .nav-sidebar .nav-link { padding:.75rem 1.5rem; margin:.25rem 1rem; border-radius:var(--border-radius); transition:var(--transition); color:var(--text-secondary); }
