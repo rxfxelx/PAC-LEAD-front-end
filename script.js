@@ -54,14 +54,19 @@ async function fetchProducts() {
     products = data.items.map(p => {
       // converte price_cents para float em reais (assume 100 = 1.00)
       const price = p.price_cents ? (p.price_cents / 100) : 0;
-      // monta data URI se houver base64
+      // determina a imagem a ser exibida. O backend expõe somente o campo
+      // image_url. Para compatibilidade com dados antigos, se a string não
+      // contiver um esquema (http, https ou data:), assumimos que trata‑se
+      // de um base64 cru de PNG e prefixamos com data:image/png;base64,
+      // caso contrário usamos a string diretamente.
       let img = null;
-      if (p.image_base64) {
-        // tenta detectar se já tem prefixo data:, se não, assume png
-        if (p.image_base64.startsWith('data:')) {
-          img = p.image_base64;
+      const raw = p.image_url || p.image_base64; // image_base64 pode vir de versões antigas
+      if (raw) {
+        const lower = raw.toLowerCase();
+        if (lower.startsWith('http') || lower.startsWith('data:')) {
+          img = raw;
         } else {
-          img = `data:image/png;base64,${p.image_base64}`;
+          img = `data:image/png;base64,${raw}`;
         }
       }
       return {
@@ -91,8 +96,8 @@ async function createProductOnBackend(product) {
       title: product.name,
       slug: product.description,
       status: 'active',
-      // envia a imagem em base64 (sem prefixo data:)
-      image_base64: product.imageBase64 || '',
+      // envia a URL da imagem. Caso não haja imagem, o campo fica vazio.
+      image_url: product.imageUrl || '',
       price_cents: product.priceCents || 0,
       stock: product.stock || 0,
       category: product.category || ''
@@ -190,6 +195,36 @@ async function loadAnalytics() {
   }
   // atualiza o gráfico
   await createPerformanceChart();
+}
+
+// Envia uma imagem para o backend e retorna a URL pública. A função
+// recebe um objeto File (por exemplo, proveniente de um <input type="file">)
+// e utiliza o endpoint /api/upload configurado no backend. Os cabeçalhos
+// de organização, fluxo e autorização são reaproveitados, mas não é
+// definido o Content-Type explicitamente para que o navegador defina
+// corretamente o boundary do multipart. Retorna a URL da imagem ou
+// lança erro caso a requisição falhe.
+async function uploadImage(file) {
+  if (!file) return null;
+  const formData = new FormData();
+  formData.append('image', file);
+  // Construímos um novo objeto de cabeçalhos sem o Content-Type, pois o
+  // navegador irá defini-lo automaticamente com o boundary adequado.
+  const headers = {
+    'X-Org-ID': defaultHeaders['X-Org-ID'],
+    'X-Flow-ID': defaultHeaders['X-Flow-ID']
+  };
+  if (defaultHeaders['Authorization']) {
+    headers['Authorization'] = defaultHeaders['Authorization'];
+  }
+  const res = await fetch(`${BACKEND_BASE}/api/upload`, {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+  if (!res.ok) throw new Error('Falha ao enviar imagem');
+  const data = await res.json();
+  return data.url;
 }
 
 // ===== DADOS EXEMPLO =====
@@ -586,21 +621,20 @@ async function addProduct() {
   if (!price || price <= 0) { showNotification("Por favor, insira um preço válido.", "warning"); return; }
   if (!description) { showNotification("Por favor, descreva o produto.", "warning"); return; }
 
-  // Converte imagem para base64 se houver arquivo. Usa Promise para aguardar
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    if (!file) return resolve(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      // result é algo como data:image/png;base64,... Removemos o prefixo
-      const base64 = result.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(file);
-  });
-
-  const imageBase64 = await toBase64(imgFile);
+  // Se houver arquivo de imagem, realiza o upload para o backend antes de
+  // criar o produto. Caso não exista imagem, o campo imageUrl permanece
+  // indefinido. O preview local continua usando a URL criada pelo
+  // browser para exibir a imagem imediatamente.
+  let uploadedUrl = null;
+  if (imgFile) {
+    try {
+      uploadedUrl = await uploadImage(imgFile);
+    } catch (err) {
+      console.error(err);
+      showNotification("Erro ao enviar imagem.", "danger");
+      return;
+    }
+  }
   const product = {
     id: Date.now(),
     name,
@@ -609,10 +643,9 @@ async function addProduct() {
     description,
     image: imgFile ? URL.createObjectURL(imgFile) : null,
     // campos para backend
-    imageBase64: imageBase64,
+    imageUrl: uploadedUrl || '',
     priceCents: Math.round(price * 100),
     stock: 0,
-    category: category || "Sem categoria",
   };
 
   // Envia o produto ao backend
