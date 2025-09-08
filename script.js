@@ -235,6 +235,12 @@ function showSection(sectionId) {
   const activeLink = document.querySelector(`[onclick="showSection('${sectionId}')"]`);
   if (activeLink) activeLink.classList.add('active');
   if (sectionId === 'analysis') setTimeout(createPerformanceChart, 100);
+  // When the company section becomes visible, fetch the existing company data
+  if (sectionId === 'company') {
+    try {
+      loadCompany();
+    } catch (_) {}
+  }
 
   // Atualiza a barra de endereços sem recarregar a página para refletir a seção atual.
   try {
@@ -342,22 +348,43 @@ document.addEventListener('DOMContentLoaded', () => {
   // necessário, adapte para realizar uma chamada ao backend.
   const saveBtn = document.getElementById('company-save-btn');
   if (saveBtn) {
-    saveBtn.addEventListener('click', () => {
+    saveBtn.addEventListener('click', async () => {
       const form = document.getElementById('company-form');
       if (!form) return;
-      const fields = [
-        'company-razao', 'company-fantasia', 'company-cnpj', 'company-insc',
-        'company-segment', 'company-phone', 'company-email', 'company-bairro',
-        'company-endereco', 'company-numero', 'company-cep', 'company-cidade',
-        'company-uf', 'company-observacoes'
-      ];
-      const data = {};
-      fields.forEach(id => {
+      // Mapeia os campos do formulário para o formato esperado pelo backend
+      const getVal = (id) => {
         const el = document.getElementById(id);
-        data[id] = el ? el.value : '';
-      });
-      console.log('Dados da empresa:', data);
-      alert('Dados da empresa capturados. Consulte o console para visualizar.');
+        return el ? el.value.trim() : '';
+      };
+      const payload = {
+        name: null, // não atualizamos o campo 'name' padrão da org aqui
+        tax_id: getVal('company-cnpj').replace(/\D/g, '') || null,
+        razao_social: getVal('company-razao') || null,
+        nome_fantasia: getVal('company-fantasia') || null,
+        inscricao_estadual: getVal('company-insc') || null,
+        segmento: getVal('company-segment') || null,
+        telefone: getVal('company-phone') || null,
+        email: getVal('company-email') || null,
+        bairro: getVal('company-bairro') || null,
+        endereco: getVal('company-endereco') || null,
+        numero: getVal('company-numero') || null,
+        cep: getVal('company-cep') || null,
+        cidade: getVal('company-cidade') || null,
+        uf: getVal('company-uf') || null,
+        observacoes: getVal('company-observacoes') || null
+      };
+      try {
+        const res = await fetch(`${BACKEND_BASE}/api/company`, {
+          method: 'PUT',
+          headers: defaultHeaders,
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Falha ao salvar dados da empresa');
+        alert('Dados da empresa salvos com sucesso!');
+      } catch (err) {
+        console.error(err);
+        alert('Não foi possível salvar os dados da empresa.');
+      }
     });
   }
 });
@@ -407,6 +434,40 @@ function toggleProductLinkConfig() {
   const checkbox = document.getElementById('product-link');
   const config = document.getElementById('product-link-config');
   if (checkbox && config) config.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+// Carrega os dados da empresa do backend e preenche o formulário correspondente.
+async function loadCompany() {
+  try {
+    const res = await fetch(`${BACKEND_BASE}/api/company`, { headers: defaultHeaders });
+    if (!res.ok) throw new Error('Falha ao carregar empresa');
+    const data = await res.json();
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val || '';
+    };
+    // map backend keys to form fields
+    setVal('company-razao', data.razao_social || data.name || '');
+    setVal('company-fantasia', data.nome_fantasia || '');
+    setVal('company-cnpj', data.tax_id || '');
+    setVal('company-insc', data.inscricao_estadual || '');
+    setVal('company-segment', data.segmento || '');
+    setVal('company-phone', data.telefone || '');
+    setVal('company-email', data.email || '');
+    setVal('company-bairro', data.bairro || '');
+    setVal('company-endereco', data.endereco || '');
+    setVal('company-numero', data.numero || '');
+    setVal('company-cep', data.cep || '');
+    setVal('company-cidade', data.cidade || '');
+    const ufSelect = document.getElementById('company-uf');
+    if (ufSelect && data.uf) {
+      ufSelect.value = data.uf;
+    }
+    setVal('company-observacoes', data.observacoes || '');
+  } catch (err) {
+    console.error(err);
+    // Não exibe alerta pois a empresa pode ainda não existir ou o backend pode não implementar o endpoint
+  }
 }
 
 // ===== PERFIL =====
