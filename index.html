@@ -493,6 +493,129 @@
             </div>
           </div>
 
+          <!-- Seção Empresa -->
+          <div id="company" class="content-section" style="display: none;">
+            <div class="content-header">
+              <div class="header-text">
+                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
+                <h1 class="page-title"><i class="fas fa-building mr-2"></i> Empresa</h1>
+                <p class="page-subtitle">Informações da empresa</p>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body">
+                <form id="company-form">
+                  <!-- Grid responsivo melhorado para formulário da empresa -->
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                      <label for="company-razao" class="form-label">Razão Social</label>
+                      <input type="text" class="form-control" id="company-razao" placeholder="Digite a razão social">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="company-fantasia" class="form-label">Nome Fantasia</label>
+                      <input type="text" class="form-control" id="company-fantasia" placeholder="Nome fantasia">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-cnpj" class="form-label">CNPJ / CPF</label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="company-cnpj" placeholder="00.000.000/0000-00">
+                        <button class="btn btn-primary d-none d-sm-block company-cnpj-search-btn" type="button">Buscar CNPJ</button>
+                        <button class="btn btn-primary d-sm-none company-cnpj-search-btn" type="button">
+                          <i class="fas fa-search"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-insc" class="form-label">Insc. Estadual</label>
+                      <input type="text" class="form-control" id="company-insc" placeholder="Isento">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-segment" class="form-label">Segmento</label>
+                      <select id="company-segment" class="form-control">
+                        <option value="">Selecione...</option>
+                        <option value="industria">Indústria</option>
+                        <option value="comercio">Comércio</option>
+                        <option value="servicos">Serviços</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-phone" class="form-label">Telefone de Contato</label>
+                      <input type="text" class="form-control" id="company-phone" placeholder="(xx) xxxx‑xxxx">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-email" class="form-label">Email Contato</label>
+                      <input type="email" class="form-control" id="company-email" placeholder="contato@empresa.com">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-bairro" class="form-label">Bairro</label>
+                      <input type="text" class="form-control" id="company-bairro" placeholder="Bairro">
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <label for="company-endereco" class="form-label">Endereço</label>
+                      <input type="text" class="form-control" id="company-endereco" placeholder="Rua, Avenida...">
+                    </div>
+                    <div class="col-12 col-md-2">
+                      <label for="company-numero" class="form-label">Número</label>
+                      <input type="text" class="form-control" id="company-numero" placeholder="123">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-cep" class="form-label">CEP</label>
+                      <input type="text" class="form-control" id="company-cep" placeholder="00000‑000">
+                    </div>
+                    <div class="col-12 col-md-4">
+                      <label for="company-cidade" class="form-label">Cidade</label>
+                      <input type="text" class="form-control" id="company-cidade" placeholder="Cidade">
+                    </div>
+                    <div class="col-12 col-md-2">
+                      <label for="company-uf" class="form-label">Estado (UF)</label>
+                      <select id="company-uf" class="form-control">
+                        <option value="">UF</option>
+                        <option value="AC">AC</option>
+                        <option value="AL">AL</option>
+                        <option value="AP">AP</option>
+                        <option value="AM">AM</option>
+                        <option value="BA">BA</option>
+                        <option value="CE">CE</option>
+                        <option value="DF">DF</option>
+                        <option value="ES">ES</option>
+                        <option value="GO">GO</option>
+                        <option value="MA">MA</option>
+                        <option value="MT">MT</option>
+                        <option value="MS">MS</option>
+                        <option value="MG">MG</option>
+                        <option value="PA">PA</option>
+                        <option value="PB">PB</option>
+                        <option value="PR">PR</option>
+                        <option value="PE">PE</option>
+                        <option value="PI">PI</option>
+                        <option value="RJ">RJ</option>
+                        <option value="RN">RN</option>
+                        <option value="RS">RS</option>
+                        <option value="RO">RO</option>
+                        <option value="RR">RR</option>
+                        <option value="SC">SC</option>
+                        <option value="SP">SP</option>
+                        <option value="SE">SE</option>
+                        <option value="TO">TO</option>
+                      </select>
+                    </div>
+                    <div class="col-12 mt-3">
+                      <label class="form-label">Selecione a Imagem/Logo da Empresa:</label><br>
+                      <input type="file" class="form-control" id="company-logo" accept="image/*">
+                    </div>
+                    <div class="col-12 mt-3">
+                      <label for="company-observacoes" class="form-label">Observações da Empresa</label>
+                      <textarea class="form-control" id="company-observacoes" rows="3" placeholder="Observações adicionais da empresa"></textarea>
+                    </div>
+                  </div>
+                  <div class="mt-4 d-flex justify-content-end">
+                    <button id="company-save-btn" type="button" class="btn btn-success">Salvar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
           <!-- Seção Produtos -->
           <div id="products" class="content-section" style="display: none;">
             <div class="content-header">
@@ -905,133 +1028,6 @@
     </div>
   </div>
 
-  <!-- Modal Adicionar Produto -->
-          <!-- Seção Empresa -->
-          <div id="company" class="content-section" style="display: none;">
-            <div class="content-header">
-              <div class="header-text">
-                <div class="welcome-text">Bem-vindo, <span class="user-name"></span>!</div>
-                <h1 class="page-title"><i class="fas fa-building mr-2"></i> Empresa</h1>
-                <p class="page-subtitle">Informações da empresa</p>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-body">
-                <form id="company-form">
-                  <!-- Grid responsivo melhorado para formulário da empresa -->
-                  <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                      <label for="company-razao" class="form-label">Razão Social</label>
-                      <input type="text" class="form-control" id="company-razao" placeholder="Digite a razão social">
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label for="company-fantasia" class="form-label">Nome Fantasia</label>
-                      <input type="text" class="form-control" id="company-fantasia" placeholder="Nome fantasia">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-cnpj" class="form-label">CNPJ / CPF</label>
-                      <div class="input-group">
-                        <input type="text" class="form-control" id="company-cnpj" placeholder="00.000.000/0000-00">
-                        <!-- Botão para buscar dados de CNPJ. Foi atribuído o mesmo id nos dois estados (desktop e mobile)
-                             para que o script possa facilmente associar o evento de clique. -->
-                        <button class="btn btn-primary d-none d-sm-block company-cnpj-search-btn" type="button">Buscar CNPJ</button>
-                        <button class="btn btn-primary d-sm-none company-cnpj-search-btn" type="button">
-                          <i class="fas fa-search"></i>
-                        </button>
-                      </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-insc" class="form-label">Insc. Estadual</label>
-                      <input type="text" class="form-control" id="company-insc" placeholder="Isento">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-segment" class="form-label">Segmento</label>
-                      <select id="company-segment" class="form-control">
-                        <option value="">Selecione...</option>
-                        <option value="industria">Indústria</option>
-                        <option value="comercio">Comércio</option>
-                        <option value="servicos">Serviços</option>
-                      </select>
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-phone" class="form-label">Telefone de Contato</label>
-                      <input type="text" class="form-control" id="company-phone" placeholder="(xx) xxxx‑xxxx">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-email" class="form-label">Email Contato</label>
-                      <input type="email" class="form-control" id="company-email" placeholder="contato@empresa.com">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-bairro" class="form-label">Bairro</label>
-                      <input type="text" class="form-control" id="company-bairro" placeholder="Bairro">
-                    </div>
-                    <div class="col-12 col-md-6">
-                      <label for="company-endereco" class="form-label">Endereço</label>
-                      <input type="text" class="form-control" id="company-endereco" placeholder="Rua, Avenida...">
-                    </div>
-                    <div class="col-12 col-md-2">
-                      <label for="company-numero" class="form-label">Número</label>
-                      <input type="text" class="form-control" id="company-numero" placeholder="123">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-cep" class="form-label">CEP</label>
-                      <input type="text" class="form-control" id="company-cep" placeholder="00000‑000">
-                    </div>
-                    <div class="col-12 col-md-4">
-                      <label for="company-cidade" class="form-label">Cidade</label>
-                      <input type="text" class="form-control" id="company-cidade" placeholder="Cidade">
-                    </div>
-                    <div class="col-12 col-md-2">
-                      <label for="company-uf" class="form-label">Estado (UF)</label>
-                      <select id="company-uf" class="form-control">
-                        <option value="">UF</option>
-                        <option value="AC">AC</option>
-                        <option value="AL">AL</option>
-                        <option value="AP">AP</option>
-                        <option value="AM">AM</option>
-                        <option value="BA">BA</option>
-                        <option value="CE">CE</option>
-                        <option value="DF">DF</option>
-                        <option value="ES">ES</option>
-                        <option value="GO">GO</option>
-                        <option value="MA">MA</option>
-                        <option value="MT">MT</option>
-                        <option value="MS">MS</option>
-                        <option value="MG">MG</option>
-                        <option value="PA">PA</option>
-                        <option value="PB">PB</option>
-                        <option value="PR">PR</option>
-                        <option value="PE">PE</option>
-                        <option value="PI">PI</option>
-                        <option value="RJ">RJ</option>
-                        <option value="RN">RN</option>
-                        <option value="RS">RS</option>
-                        <option value="RO">RO</option>
-                        <option value="RR">RR</option>
-                        <option value="SC">SC</option>
-                        <option value="SP">SP</option>
-                        <option value="SE">SE</option>
-                        <option value="TO">TO</option>
-                      </select>
-                    </div>
-                    <div class="col-12 mt-3">
-                      <label class="form-label">Selecione a Imagem/Logo da Empresa:</label><br>
-                      <input type="file" class="form-control" id="company-logo" accept="image/*">
-                    </div>
-                    <div class="col-12 mt-3">
-                      <label for="company-observacoes" class="form-label">Observações da Empresa</label>
-                      <textarea class="form-control" id="company-observacoes" rows="3" placeholder="Observações adicionais da empresa"></textarea>
-                    </div>
-                  </div>
-                  <div class="mt-4 d-flex justify-content-end">
-                    <!-- Botão de salvar empresa. Um id é definido para que o script possa capturar o clique e
-                         executar ações, como enviar os dados para o backend. -->
-                    <button id="company-save-btn" type="button" class="btn btn-success">Salvar</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
 
           <!-- Seção Usuários removida -->
   <div class="modal fade" id="addProductModal" tabindex="-1" role="dialog">
