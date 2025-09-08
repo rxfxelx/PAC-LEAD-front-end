@@ -16,11 +16,8 @@ const BOT_URL = BACKEND_BASE + '/api/bot/message';
 const VISION_UPLOAD_URL = BOT_URL;
 
 // Define cabeçalhos padrão utilizados em todas as chamadas à API.
-// Os valores de organização e fluxo, bem como o token JWT, são lidos do
-// localStorage para que reflitam o usuário autenticado. Se não houver
-// valores armazenados (por exemplo, antes do login), os cabeçalhos de
-// org e flow são definidos como "1". A chave Authorization só é
-// enviada quando um token válido existir.
+// OBS: NÃO colocamos Content-Type aqui para não quebrar multipart/form-data.
+// Em cada requisição JSON, adicionamos o Content-Type localmente.
 const defaultHeaders = (() => {
   let orgId = '1';
   let flowId = '1';
@@ -36,7 +33,6 @@ const defaultHeaders = (() => {
     // Se localStorage não estiver acessível, permanecem os valores padrões.
   }
   const headers = {
-    'Content-Type': 'application/json',
     'X-Org-ID': orgId,
     'X-Flow-ID': flowId
   };
@@ -106,9 +102,10 @@ async function createProductOnBackend(product) {
       stock: product.stock || 0,
       category: product.category || ''
     };
+    const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
     const res = await fetch(`${BACKEND_BASE}/api/products`, {
       method: 'POST',
-      headers: defaultHeaders,
+      headers,
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error('Falha ao criar produto');
@@ -201,19 +198,12 @@ async function loadAnalytics() {
   await createPerformanceChart();
 }
 
-// Envia uma imagem para o backend e retorna a URL pública. A função
-// recebe um objeto File (por exemplo, proveniente de um <input type="file">)
-// e utiliza o endpoint /api/upload configurado no backend. Os cabeçalhos
-// de organização, fluxo e autorização são reaproveitados, mas não é
-// definido o Content-Type explicitamente para que o navegador defina
-// corretamente o boundary do multipart. Retorna a URL da imagem ou
-// lança erro caso a requisição falhe.
+// Envia uma imagem para o backend e retorna a URL pública.
 async function uploadImage(file) {
   if (!file) return null;
   const formData = new FormData();
   formData.append('image', file);
-  // Construímos um novo objeto de cabeçalhos sem o Content-Type, pois o
-  // navegador irá defini-lo automaticamente com o boundary adequado.
+  // Cabeçalhos sem Content-Type (browser define o boundary)
   const headers = {
     'X-Org-ID': defaultHeaders['X-Org-ID'],
     'X-Flow-ID': defaultHeaders['X-Flow-ID']
@@ -312,9 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===== EMPRESA: busca de dados via CNPJ =====
-  // Seleciona o botão de busca e o input de CNPJ. Em telas menores o botão
-  // possui uma versão compacta, mas ambos recebem o mesmo id para
-  // simplificar a captura.
   const cnpjButtons = document.querySelectorAll('.company-cnpj-search-btn');
   const cnpjInput = document.getElementById('company-cnpj');
   if (cnpjButtons.length && cnpjInput) {
@@ -322,54 +309,39 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.addEventListener('click', async () => {
         const raw = cnpjInput.value || '';
         const digits = raw.replace(/\D/g, '');
-        // Um CNPJ possui 14 dígitos numéricos. Valida antes de consultar.
         if (digits.length !== 14) {
           alert('CNPJ inválido. Digite um número com 14 dígitos.');
           return;
         }
-        // Desabilita todos os botões de busca para evitar requisições simultâneas.
         cnpjButtons.forEach(b => b.disabled = true);
         const originalTexts = Array.from(cnpjButtons).map(b => b.textContent);
         cnpjButtons.forEach((b, idx) => {
-          // Mantém o ícone em botões compactos e atualiza apenas texto dos demais
-          if (!b.classList.contains('d-sm-none')) {
-            b.textContent = 'Buscando...';
-          }
+          if (!b.classList.contains('d-sm-none')) b.textContent = 'Buscando...';
         });
         try {
-          // Consulta a API pública da BrasilAPI para recuperar os dados da empresa.
           const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
           if (!res.ok) throw new Error('Falha na requisição');
           const data = await res.json();
-          // Preenche campos do formulário de acordo com a resposta obtida.
           const setValue = (id, value) => {
             const el = document.getElementById(id);
             if (el) el.value = value || '';
           };
           setValue('company-razao', data.razao_social);
           setValue('company-fantasia', data.nome_fantasia);
-          // Telefones: compõe com DDD e número, se disponível. Não aplica formatação de máscara.
-          if (data.ddd_telefone_1) {
-            setValue('company-phone', data.ddd_telefone_1);
-          }
+          if (data.ddd_telefone_1) setValue('company-phone', data.ddd_telefone_1);
           setValue('company-email', data.email);
-          // Endereço: logradouro + complemento, se houver.
           const endereco = [data.logradouro, data.complemento].filter(Boolean).join(' ');
           setValue('company-endereco', endereco);
           setValue('company-numero', data.numero);
           setValue('company-bairro', data.bairro);
           setValue('company-cidade', data.municipio);
           setValue('company-cep', data.cep);
-          // Seleciona a UF correspondente se existir option.
           const ufSelect = document.getElementById('company-uf');
-          if (ufSelect && data.uf) {
-            ufSelect.value = data.uf;
-          }
+          if (ufSelect && data.uf) ufSelect.value = data.uf;
         } catch (err) {
           console.error(err);
           alert('Não foi possível buscar os dados do CNPJ.');
         } finally {
-          // Restaura estado dos botões
           cnpjButtons.forEach((b, idx) => {
             b.disabled = false;
             if (!b.classList.contains('d-sm-none')) {
@@ -382,21 +354,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===== EMPRESA: ação ao salvar =====
-  // No momento não há um endpoint no backend para persistir a empresa. Esta
-  // função apenas coleta os dados preenchidos e os imprime no console. Caso
-  // necessário, adapte para realizar uma chamada ao backend.
   const saveBtn = document.getElementById('company-save-btn');
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
       const form = document.getElementById('company-form');
       if (!form) return;
-      // Mapeia os campos do formulário para o formato esperado pelo backend
       const getVal = (id) => {
         const el = document.getElementById(id);
         return el ? el.value.trim() : '';
       };
       const payload = {
-        name: null, // não atualizamos o campo 'name' padrão da org aqui
+        name: null,
         tax_id: getVal('company-cnpj').replace(/\D/g, '') || null,
         razao_social: getVal('company-razao') || null,
         nome_fantasia: getVal('company-fantasia') || null,
@@ -413,9 +381,10 @@ document.addEventListener('DOMContentLoaded', () => {
         observacoes: getVal('company-observacoes') || null
       };
       try {
+        const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
         const res = await fetch(`${BACKEND_BASE}/api/company`, {
           method: 'PUT',
-          headers: defaultHeaders,
+          headers,
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Falha ao salvar dados da empresa');
@@ -625,10 +594,6 @@ async function addProduct() {
   if (!price || price <= 0) { showNotification("Por favor, insira um preço válido.", "warning"); return; }
   if (!description) { showNotification("Por favor, descreva o produto.", "warning"); return; }
 
-  // Se houver arquivo de imagem, realiza o upload para o backend antes de
-  // criar o produto. Caso não exista imagem, o campo imageUrl permanece
-  // indefinido. O preview local continua usando a URL criada pelo
-  // browser para exibir a imagem imediatamente.
   let uploadedUrl = null;
   if (imgFile) {
     try {
@@ -652,7 +617,6 @@ async function addProduct() {
     stock: 0,
   };
 
-  // Envia o produto ao backend
   const created = await createProductOnBackend(product);
   if (created) {
     showNotification("Produto adicionado com sucesso!", "success");
@@ -750,14 +714,11 @@ async function createPerformanceChart() {
     if (res && Array.isArray(res.items) && res.items.length > 0) {
       labels = res.items.map(item => {
         const d = new Date(item.t);
-        // exibe dia/mês e hora:minuto
         return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
       });
       conversions = res.items.map(item => Number(item.c));
-      // gera um valor aproximado de leads proporcional às conversões
       leadsData = conversions.map(c => Math.round(c * 1.5));
     } else {
-      // fallback para dados de exemplo
       labels = ["Semana 1","Semana 2","Semana 3","Semana 4","Semana 5","Semana 6"];
       conversions = [12,19,8,15,22,18];
       leadsData = [8,12,15,10,18,14];
@@ -860,7 +821,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.target.classList.contains('modal')) closeMetricModal(e.target.id);
   });
   if (document.getElementById('analysis').style.display !== 'none') {
-    // se a seção de análise estiver visível, carrega o gráfico imediatamente
     createPerformanceChart();
   }
   // Carrega dados iniciais de produtos e métricas
@@ -1074,31 +1034,23 @@ class Chatbot {
 
     try {
       if (hasPendingImage) {
-        // esconde preview e solta o arquivo ANTES da requisição (some na hora)
         const fileToSend = this.pendingImageFile;
         this.pendingImageFile = null;
         this.hideAttachmentPreview();
 
         await this.sendImageFile(fileToSend, message || 'Analise a imagem de forma objetiva.');
       } else {
-        // Send the text message to the bot. Include tenant headers so the
-        // backend knows which organisation and flow to operate under. The
-        // request body contains only the message; any additional session
-        // information is ignored by the backend but kept for future use.
         const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
         const response = await fetch(this.webhookUrl, {
           method: 'POST',
           headers,
-          body: JSON.stringify({
-            message
-          })
+          body: JSON.stringify({ message })
         });
         if (!response.ok) throw new Error('Erro na resposta do servidor');
         const data = await response.json();
 
         this.hideTypingIndicator();
 
-        // 🔥 Normaliza diferentes formatos de resposta do backend
         const text =
           (data && (data.reply || data.output || data.message || data.text || data.content
             || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'OK.';
@@ -1160,11 +1112,13 @@ class Chatbot {
       // The bot expects a "message" field with any accompanying text.
       fd.append('message', prompt);
 
-      // Use the bot endpoint for image uploads. Do not set Content-Type
-      // explicitly when sending FormData – the browser will add the correct
-      // multipart boundary. Include tenant and auth headers so the backend
-      // identifies the organisation and user.
-      const imgHeaders = { ...defaultHeaders };
+      // IMPORTANT: não incluir Content-Type; só tenant/auth.
+      const imgHeaders = {
+        'X-Org-ID': defaultHeaders['X-Org-ID'],
+        'X-Flow-ID': defaultHeaders['X-Flow-ID']
+      };
+      if (defaultHeaders['Authorization']) imgHeaders['Authorization'] = defaultHeaders['Authorization'];
+
       const resp = await fetch(VISION_UPLOAD_URL, {
         method: 'POST',
         headers: imgHeaders,
@@ -1175,8 +1129,6 @@ class Chatbot {
 
       this.hideTypingIndicator();
 
-      // Interpret the bot response. It returns a "reply" field with the
-      // assistant's message. There is no image_url in this endpoint.
       const text = (data && (data.reply || data.message || data.text || data.content)) || 'Imagem recebida.';
 
       this.addMessage(text, 'bot');
