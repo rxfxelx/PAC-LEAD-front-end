@@ -368,6 +368,12 @@
           <label for="register-email" class="form-label">Email</label>
           <input type="email" class="form-control" id="register-email" placeholder="Digite seu email" required>
         </div>
+  <!-- Campo para CPF ou CNPJ. Utilizamos um único campo para ambas as
+       modalidades. Somente dígitos serão enviados ao backend. -->
+  <div class="mb-3">
+    <label for="register-tax" class="form-label">CPF ou CNPJ</label>
+    <input type="text" class="form-control" id="register-tax" placeholder="Digite seu CPF ou CNPJ" required>
+  </div>
         <div class="mb-4">
           <label for="register-password" class="form-label">Senha</label>
           <input type="password" class="form-control" id="register-password" placeholder="Crie uma senha" required>
