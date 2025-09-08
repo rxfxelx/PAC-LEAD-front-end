@@ -932,8 +932,10 @@
                       <label for="company-cnpj" class="form-label">CNPJ / CPF</label>
                       <div class="input-group">
                         <input type="text" class="form-control" id="company-cnpj" placeholder="00.000.000/0000-00">
-                        <button class="btn btn-primary d-none d-sm-block" type="button">Buscar CNPJ</button>
-                        <button class="btn btn-primary d-sm-none" type="button">
+                        <!-- Botão para buscar dados de CNPJ. Foi atribuído o mesmo id nos dois estados (desktop e mobile)
+                             para que o script possa facilmente associar o evento de clique. -->
+                        <button class="btn btn-primary d-none d-sm-block company-cnpj-search-btn" type="button">Buscar CNPJ</button>
+                        <button class="btn btn-primary d-sm-none company-cnpj-search-btn" type="button">
                           <i class="fas fa-search"></i>
                         </button>
                       </div>
@@ -1022,7 +1024,9 @@
                     </div>
                   </div>
                   <div class="mt-4 d-flex justify-content-end">
-                    <button type="button" class="btn btn-success">Salvar</button>
+                    <!-- Botão de salvar empresa. Um id é definido para que o script possa capturar o clique e
+                         executar ações, como enviar os dados para o backend. -->
+                    <button id="company-save-btn" type="button" class="btn btn-success">Salvar</button>
                   </div>
                 </form>
               </div>
