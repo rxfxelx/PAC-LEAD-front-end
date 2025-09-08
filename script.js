@@ -265,6 +265,101 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (_) {
     // ignora erros de leitura do localStorage
   }
+
+  // ===== EMPRESA: busca de dados via CNPJ =====
+  // Seleciona o botão de busca e o input de CNPJ. Em telas menores o botão
+  // possui uma versão compacta, mas ambos recebem o mesmo id para
+  // simplificar a captura.
+  const cnpjButtons = document.querySelectorAll('.company-cnpj-search-btn');
+  const cnpjInput = document.getElementById('company-cnpj');
+  if (cnpjButtons.length && cnpjInput) {
+    cnpjButtons.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const raw = cnpjInput.value || '';
+        const digits = raw.replace(/\D/g, '');
+        // Um CNPJ possui 14 dígitos numéricos. Valida antes de consultar.
+        if (digits.length !== 14) {
+          alert('CNPJ inválido. Digite um número com 14 dígitos.');
+          return;
+        }
+        // Desabilita todos os botões de busca para evitar requisições simultâneas.
+        cnpjButtons.forEach(b => b.disabled = true);
+        const originalTexts = Array.from(cnpjButtons).map(b => b.textContent);
+        cnpjButtons.forEach((b, idx) => {
+          // Mantém o ícone em botões compactos e atualiza apenas texto dos demais
+          if (!b.classList.contains('d-sm-none')) {
+            b.textContent = 'Buscando...';
+          }
+        });
+        try {
+          // Consulta a API pública da BrasilAPI para recuperar os dados da empresa.
+          const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
+          if (!res.ok) throw new Error('Falha na requisição');
+          const data = await res.json();
+          // Preenche campos do formulário de acordo com a resposta obtida.
+          const setValue = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.value = value || '';
+          };
+          setValue('company-razao', data.razao_social);
+          setValue('company-fantasia', data.nome_fantasia);
+          // Telefones: compõe com DDD e número, se disponível. Não aplica formatação de máscara.
+          if (data.ddd_telefone_1) {
+            setValue('company-phone', data.ddd_telefone_1);
+          }
+          setValue('company-email', data.email);
+          // Endereço: logradouro + complemento, se houver.
+          const endereco = [data.logradouro, data.complemento].filter(Boolean).join(' ');
+          setValue('company-endereco', endereco);
+          setValue('company-numero', data.numero);
+          setValue('company-bairro', data.bairro);
+          setValue('company-cidade', data.municipio);
+          setValue('company-cep', data.cep);
+          // Seleciona a UF correspondente se existir option.
+          const ufSelect = document.getElementById('company-uf');
+          if (ufSelect && data.uf) {
+            ufSelect.value = data.uf;
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Não foi possível buscar os dados do CNPJ.');
+        } finally {
+          // Restaura estado dos botões
+          cnpjButtons.forEach((b, idx) => {
+            b.disabled = false;
+            if (!b.classList.contains('d-sm-none')) {
+              b.textContent = originalTexts[idx] || 'Buscar CNPJ';
+            }
+          });
+        }
+      });
+    });
+  }
+
+  // ===== EMPRESA: ação ao salvar =====
+  // No momento não há um endpoint no backend para persistir a empresa. Esta
+  // função apenas coleta os dados preenchidos e os imprime no console. Caso
+  // necessário, adapte para realizar uma chamada ao backend.
+  const saveBtn = document.getElementById('company-save-btn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const form = document.getElementById('company-form');
+      if (!form) return;
+      const fields = [
+        'company-razao', 'company-fantasia', 'company-cnpj', 'company-insc',
+        'company-segment', 'company-phone', 'company-email', 'company-bairro',
+        'company-endereco', 'company-numero', 'company-cep', 'company-cidade',
+        'company-uf', 'company-observacoes'
+      ];
+      const data = {};
+      fields.forEach(id => {
+        const el = document.getElementById(id);
+        data[id] = el ? el.value : '';
+      });
+      console.log('Dados da empresa:', data);
+      alert('Dados da empresa capturados. Consulte o console para visualizar.');
+    });
+  }
 });
 
 // Função de logout: limpa dados do usuário e redireciona para a página de login
