@@ -91,6 +91,13 @@
       if (userName) {
         localStorage.setItem('user_name', userName);
       }
+      // Armazena o CPF/CNPJ associado ao cadastro, se estiver presente na resposta
+      const extractTax = (d) =>
+        d.tax_id || d.taxId || (d.user && (d.user.tax_id || d.user.taxId)) || '';
+      const tax = extractTax(data);
+      if (tax) {
+        localStorage.setItem('tax_id', tax);
+      }
     } catch (_) {
       // Ignora erros de armazenamento do nome
     }
@@ -134,11 +141,19 @@
     const name = $('register-name').value.trim();
     const email = $('register-email').value.trim();
     const password = $('register-password').value;
+    const rawTax = ($('register-tax') && $('register-tax').value.trim()) || '';
+    // remove non‑digit characters from CPF/CNPJ
+    const taxDigits = rawTax.replace(/\D/g, '');
+    // validate the identifier: must be 11 or 14 digits (CPF or CNPJ)
+    if (taxDigits.length !== 11 && taxDigits.length !== 14) {
+      showError('CPF/CNPJ inválido. Informe um número com 11 ou 14 dígitos.');
+      return;
+    }
     try {
       const res = await fetch(API('/auth/register'), {
         method: 'POST',
         headers: defaultHeaders(),
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, tax_id: taxDigits })
       });
       const data = await parseJSON(res);
       // se a API já devolver token no cadastro, salva e redireciona
