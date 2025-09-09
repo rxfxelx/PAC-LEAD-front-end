@@ -2,7 +2,11 @@
 <html lang="pt-BR">
 <head>
 <script>
-  window.__BACKEND_BASE__ = window.__BACKEND_BASE__ || (location.origin); // ajuste conforme seu deploy
+  /* Configuração fixa do domínio do backend.
+     Não use location.origin aqui, pois o front e o back estão em domínios diferentes.
+     Se o endereço do seu backend mudar, edite a URL abaixo.
+  */
+  window.__BACKEND_BASE__ = "https://pac-lead-production.up.railway.app";
   window.__API_PREFIX__ = "/api";
 </script>
 
