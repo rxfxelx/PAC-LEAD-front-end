@@ -1149,76 +1149,46 @@ class Chatbot {
 
   // *** FIX: enviar FormData sem Content-Type manual ***
   async sendImageFile(file, prompt = 'Analise a imagem de forma objetiva.') {
-    if (!file) return;
-    try {
-      const fd = new FormData();
-      fd.append('image', file, file.name || 'image.png');
-      fd.append('message', prompt);
-
-      // Monte headers SEM Content-Type. Só tenant + auth.
-      const imgHeaders = {
-        'X-Org-ID': defaultHeaders['X-Org-ID'],
-        'X-Flow-ID': defaultHeaders['X-Flow-ID']
-      };
-      if (defaultHeaders['Authorization']) {
-        imgHeaders['Authorization'] = defaultHeaders['Authorization'];
-      }
-
-      const resp = await fetch(VISION_UPLOAD_URL, {
-        method: 'POST',
-        headers: imgHeaders,
-        body: fd
-      });
-
-      const contentType = resp.headers.get('content-type') || '';
-      const data = contentType.includes('application/json')
-        ? await resp.json()
-        : { reply: await resp.text() };
-
-      this.hideTypingIndicator();
-
-      if (!resp.ok) {
-        const msg = (data && (data.reply || data.message || data.error)) || `Erro ${resp.status}`;
-        this.addMessage(String(msg), 'bot');
-        this._pushHistory('assistant', '[erro imagem]');
-        return;
-      }
-
-      const text = (data && (data.reply || data.message || data.text || data.content)) || 'Imagem recebida.';
-      this.addMessage(text, 'bot');
-      this._pushHistory('assistant', text);
-    } catch (e) {
-      console.error(e);
-      this.hideTypingIndicator();
-      this.addMessage('Erro ao analisar a imagem.', 'bot');
-      this._pushHistory('assistant', '[erro imagem]');
-    }
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('message', prompt);
+    const headers = {
+      'X-Org-ID': defaultHeaders['X-Org-ID'],
+      'X-Flow-ID': defaultHeaders['X-Flow-ID']
+    };
+    if (defaultHeaders['Authorization']) headers['Authorization'] = defaultHeaders['Authorization'];
+    const resp = await fetch(VISION_UPLOAD_URL, {
+      method: 'POST',
+      headers,
+      body: fd
+    });
   }
 
-  showTypingIndicator() {
-    if (this.isTyping) return;
-    this.isTyping = true;
-    const messagesContainer = document.getElementById('chatbot-messages');
-    if (!messagesContainer) return;
 
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message bot-message';
-    typingDiv.id = 'typing-indicator';
-    typingDiv.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
+    showTypingIndicator() {
+      if (this.isTyping) return;
+      this.isTyping = true;
+      const messagesContainer = document.getElementById('chatbot-messages');
+      if (!messagesContainer) return;
+
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot-message';
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="typing-indicator">
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
         </div>
-      </div>
-    `;
-    messagesContainer.appendChild(typingDiv);
-    this.scrollToBottom();
+      `;
+      messagesContainer.appendChild(typingDiv);
+      this.scrollToBottom();
 
-    const sendBtn = document.getElementById('chatbot-send');
-    if (sendBtn) sendBtn.disabled = true;
-  }
+      const sendBtn = document.getElementById('chatbot-send');
+      if (sendBtn) sendBtn.disabled = true;
+    }
 
   hideTypingIndicator() {
     this.isTyping = false;
