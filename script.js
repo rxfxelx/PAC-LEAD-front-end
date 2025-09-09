@@ -1122,6 +1122,21 @@ class Chatbot {
 
         this.hideTypingIndicator();
 
+        // Se o backend retornou um produto recém‑criado (via integração com
+        // a visão), atualiza imediatamente a lista de produtos no painel.
+        // A chamada é assíncrona mas não bloqueia o fluxo do chat. Caso a
+        // função fetchProducts esteja indisponível (por exemplo em telas
+        // sem a seção de produtos), a falha é silenciosa.
+        if (data && data.product) {
+          try {
+            // Atualiza a tabela de produtos no fundo. Não aguarda a resolução
+            // desta promessa para não atrasar a resposta do chat.
+            fetchProducts();
+          } catch (_) {
+            // Ignora erros, por exemplo se fetchProducts não está definido
+          }
+        }
+
         // 🔥 Normaliza diferentes formatos de resposta do backend
         const text =
           (data && (data.reply || data.output || data.message || data.text || data.content
