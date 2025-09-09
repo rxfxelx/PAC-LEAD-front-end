@@ -1412,7 +1412,55 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// === SPA: map pathname to section and initialize ===
-function pathToSection(path){var m={'/agente':'agent-config','/analise':'analysis','/produtos':'products','/pagamentos':'payments','/empresa':'company','/usuarios':'users'};return m[path]||'agent-config';}
-document.addEventListener('DOMContentLoaded',function(){try{var p=location.pathname.replace(/\/$/,'');if(p==='')p='/';showSection(pathToSection(p));}catch(e){}});
-window.addEventListener('popstate',function(){try{showSection(pathToSection(location.pathname.replace(/\/$/,'')));}catch(e){}});
+// No front‑end, allow navigation with pretty URLs (e.g., /agente, /empresa) and
+// handle reloads/back/forward by showing the correct section. This does not affect
+// the CSS or other functionality.
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    const sectionMap = {
+      '/agente': 'agent-config',
+      '/analise': 'analysis',
+      '/produtos': 'products',
+      '/pagamentos': 'payments',
+      '/empresa': 'company',
+      '/usuarios': 'users'
+    };
+    const path = window.location.pathname;
+    const initialSection = sectionMap[path] || 'agent-config';
+    showSection(initialSection);
+    // Respond to back/forward navigation by showing the matching section
+    window.addEventListener('popstate', function() {
+      const newPath = window.location.pathname;
+      const newSection = sectionMap[newPath] || 'agent-config';
+      showSection(newSection);
+    });
+  } catch (_) {
+    // Se algo falhar, mostra a seção padrão
+    showSection('agent-config');
+  }
+});
+
+
+// === SPA boot (single-run) ===
+function pathToSection(path){
+  var map={'/agente':'agent-config','/analise':'analysis','/produtos':'products','/pagamentos':'payments','/empresa':'company','/usuarios':'users'};
+  return map[path]||'agent-config';
+}
+(function(){
+  var booted=false;
+  document.addEventListener('DOMContentLoaded',function(){
+    if(booted) return; booted=true;
+    try{
+      var p=location.pathname.replace(/\/$/,'');
+      if(p==='') p='/';
+      showSection(pathToSection(p));
+    }catch(e){}
+  });
+  window.addEventListener('popstate',function(){
+    try{
+      var p=location.pathname.replace(/\/$/,'');
+      if(p==='') p='/';
+      showSection(pathToSection(p));
+    }catch(e){}
+  });
+})();
