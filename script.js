@@ -908,7 +908,10 @@ function loadAgentConfig() {
 }
 
 
-  // ===== CHATBOT (substituir esta classe inteira) =====
+  // ===== CHATBOT =====
+  // Abaixo está a implementação corrigida e funcional da classe Chatbot.
+  // Não é necessário substituir esta classe, a menos que futuras alterações sejam necessárias.
+  // Este comentário foi mantido apenas para referência histórica.
   class Chatbot {
     constructor() {
       this.webhookUrl = BOT_URL;          // /api/bot/message
@@ -1236,5 +1239,4 @@ function loadAgentConfig() {
       return div.innerHTML;
     }
   }
-  // ===== FIM da classe Chatbot corrigida =====
 
