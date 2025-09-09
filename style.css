@@ -355,7 +355,7 @@ body {
 .btn {
   border-radius: var(--border-radius);
   font-weight: 500;
-  padding: .75rem 1.5rem;
+  padding: 0.0rem 1.5rem;
   transition: var(--transition-fast);
   border: none;
   cursor: pointer;
