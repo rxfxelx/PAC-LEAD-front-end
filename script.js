@@ -907,337 +907,334 @@ function loadAgentConfig() {
   }
 }
 
-// ===== CHATBOT =====
-class Chatbot {
-  constructor() {
-    // Send chat messages to the bot endpoint which handles both generic
-    // conversation and product registration. It uses the BOT_URL constant
-    // defined above.
-    this.webhookUrl = BOT_URL;
-    this.isOpen = false;
-    this.isTyping = false;
-    this.sessionId = this.generateSessionId();
-    this.pendingImageFile = null;
 
-    // memória volátil
-    this.history = [];
-    this.maxHistory = 20;
-
-    this.init();
-  }
-
-  generateSessionId() {
-    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  }
-
-  bindOnce(el, evt, handler) {
-    if (!el || !evt || !handler) return;
-    const key = `__bound_${evt}`;
-    if (el.dataset && el.dataset[key]) return;
-    el.addEventListener(evt, handler);
-    if (el.dataset) el.dataset[key] = '1';
-  }
-
-  init() {
-    this.bindEvents();
-    this.addInitialMessage();
-    this.ensureAttachmentControls();
-  }
-
-  ensureAttachmentControls() {
-    const container = document.querySelector('.chatbot-input-container');
-    if (!container) return;
-
-    let imgBtn = document.getElementById('chatbot-image-btn');
-    let imgInput = document.getElementById('chatbot-image-input');
-    let preview = document.getElementById('chatbot-attachment-preview');
-
-    if (!imgBtn) {
-      imgBtn = document.createElement('button');
-      imgBtn.id = 'chatbot-image-btn';
-      imgBtn.type = 'button';
-      imgBtn.className = 'chatbot-send-btn';
-      imgBtn.innerHTML = '<i class="fas fa-image"></i>';
-      container.insertBefore(imgBtn, container.firstChild);
-    }
-    if (!imgInput) {
-      imgInput = document.createElement('input');
-      imgInput.type = 'file';
-      imgInput.id = 'chatbot-image-input';
-      imgInput.accept = 'image/*';
-      imgInput.style.display = 'none';
-      container.appendChild(imgInput);
-    }
-    if (!preview) {
-      preview = document.createElement('div');
-      preview.id = 'chatbot-attachment-preview';
-      preview.style.cssText = 'position:absolute; bottom:68px; right:20px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; display:none; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(0,0,0,.25);';
-      preview.innerHTML = '<span style="font-size:.85rem;color:#ddd">Imagem anexada</span> <button type="button" id="chatbot-attachment-remove" class="btn btn-sm btn-outline-secondary" style="padding:.15rem .4rem;">remover</button>';
-      const win = document.getElementById('chatbot-window');
-      if (win) { win.style.position = 'relative'; win.appendChild(preview); }
-    }
-
-    this.bindOnce(imgBtn, 'click', () => imgInput.click());
-    this.bindOnce(imgInput, 'change', () => {
-      const file = imgInput.files && imgInput.files[0];
-      if (!file) return;
-      if (!file.type || !file.type.startsWith('image/')) {
-        this.addMessage('Arquivo inválido. Selecione uma imagem.', 'bot');
-        imgInput.value = '';
-        return;
-      }
-      this.pendingImageFile = file;
-      this.showAttachmentPreview();
-      this.addImageBubble(URL.createObjectURL(file), 'user');
-      imgInput.value = '';
-    });
-    const removeBtn = document.getElementById('chatbot-attachment-remove');
-    this.bindOnce(removeBtn, 'click', () => {
-      this.pendingImageFile = null;
-      this.hideAttachmentPreview();
-    });
-  }
-
-  showAttachmentPreview() {
-    const el = document.getElementById('chatbot-attachment-preview');
-    if (el) el.style.display = 'flex';
-  }
-  hideAttachmentPreview() {
-    const el = document.getElementById('chatbot-attachment-preview');
-    if (el) el.style.display = 'none';
-  }
-
-  bindEvents() {
-    const toggle = document.getElementById('chatbot-toggle');
-    const close = document.getElementById('chatbot-close');
-    const input = document.getElementById('chatbot-input');
-    const sendBtn = document.getElementById('chatbot-send');
-
-    this.bindOnce(toggle, 'click', () => this.toggleChat());
-    this.bindOnce(close, 'click', () => this.closeChat());
-    this.bindOnce(input, 'keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        this.sendMessage();
-      }
-    });
-    this.bindOnce(sendBtn, 'click', () => this.sendMessage());
-  }
-
-  toggleChat() {
-    const windowEl = document.getElementById('chatbot-window');
-    const container = document.querySelector('.chatbot-container');
-    if (!windowEl) return;
-    if (this.isOpen) {
-      windowEl.classList.remove('show');
+  // ===== CHATBOT (substituir esta classe inteira) =====
+  class Chatbot {
+    constructor() {
+      this.webhookUrl = BOT_URL;          // /api/bot/message
       this.isOpen = false;
-      if (container) container.classList.remove('open');
-    } else {
-      windowEl.classList.add('show');
-      this.isOpen = true;
-      if (container) container.classList.add('open');
-      setTimeout(() => {
-        const input = document.getElementById('chatbot-input');
-        if (input) input.focus();
-      }, 300);
+      this.isTyping = false;
+      this.sessionId = this.generateSessionId();
+      this.pendingImageFile = null;
+
+      // Memória volátil local ao navegador (não conflita com memória server-side)
+      this.history = [];
+      this.maxHistory = 20;
+
+      this.init();
     }
-  }
-  openChat(){ if (!this.isOpen) this.toggleChat(); }
-  closeChat(){ if (this.isOpen) this.toggleChat(); }
 
-  addInitialMessage(){ /* opcional */ }
-
-  _pushHistory(role, content){
-    this.history.push({ role, content, ts: Date.now() });
-    if (this.history.length > this.maxHistory) this.history = this.history.slice(-this.maxHistory);
-  }
-  clearMemory(){ this.history = []; showNotification('Memória do chat limpa.','info'); }
-
-  async sendMessage() {
-    const input = document.getElementById('chatbot-input');
-    const raw = input.value || '';
-    const message = raw.trim();
-    if (this.isTyping) return;
-
-    const hasPendingImage = !!this.pendingImageFile;
-    if (!message && !hasPendingImage) return;
-
-    // ecoa e limpa IMEDIATAMENTE
-    if (message) {
-      this.addMessage(message, 'user');
-      this._pushHistory('user', message);
+    generateSessionId() {
+      return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
-    input.value = '';
-    input.blur();
 
-    this.showTypingIndicator();
+    bindOnce(el, evt, handler) {
+      if (!el || !evt || !handler) return;
+      const key = `__bound_${evt}`;
+      if (el.dataset && el.dataset[key]) return;
+      el.addEventListener(evt, handler);
+      if (el.dataset) el.dataset[key] = '1';
+    }
 
-    try {
-      if (hasPendingImage) {
-        // esconde preview e solta o arquivo ANTES da requisição (some na hora)
-        const fileToSend = this.pendingImageFile;
+    init() {
+      this.bindEvents();
+      this.addInitialMessage();
+      this.ensureAttachmentControls();
+    }
+
+    ensureAttachmentControls() {
+      const container = document.querySelector('.chatbot-input-container');
+      if (!container) return;
+
+      let imgBtn = document.getElementById('chatbot-image-btn');
+      let imgInput = document.getElementById('chatbot-image-input');
+      let preview = document.getElementById('chatbot-attachment-preview');
+
+      if (!imgBtn) {
+        imgBtn = document.createElement('button');
+        imgBtn.id = 'chatbot-image-btn';
+        imgBtn.type = 'button';
+        imgBtn.className = 'chatbot-send-btn';
+        imgBtn.innerHTML = '<i class="fas fa-image"></i>';
+        container.insertBefore(imgBtn, container.firstChild);
+      }
+      if (!imgInput) {
+        imgInput = document.createElement('input');
+        imgInput.type = 'file';
+        imgInput.id = 'chatbot-image-input';
+        imgInput.accept = 'image/*';
+        imgInput.style.display = 'none';
+        container.appendChild(imgInput);
+      }
+      if (!preview) {
+        preview = document.createElement('div');
+        preview.id = 'chatbot-attachment-preview';
+        preview.style.cssText = 'position:absolute; bottom:68px; right:20px; background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:8px; padding:8px 10px; display:none; align-items:center; gap:8px; box-shadow:0 4px 12px rgba(0,0,0,.25);';
+        preview.innerHTML = '<span style="font-size:.85rem;color:#ddd">Imagem anexada</span> <button type="button" id="chatbot-attachment-remove" class="btn btn-sm btn-outline-secondary" style="padding:.15rem .4rem;">remover</button>';
+        const win = document.getElementById('chatbot-window');
+        if (win) { win.style.position = 'relative'; win.appendChild(preview); }
+      }
+
+      this.bindOnce(imgBtn, 'click', () => imgInput.click());
+      this.bindOnce(imgInput, 'change', () => {
+        const file = imgInput.files && imgInput.files[0];
+        if (!file) return;
+        if (!file.type || !file.type.startsWith('image/')) {
+          this.addMessage('Arquivo inválido. Selecione uma imagem.', 'bot');
+          imgInput.value = '';
+          return;
+        }
+        this.pendingImageFile = file;
+        this.showAttachmentPreview();
+        this.addImageBubble(URL.createObjectURL(file), 'user');
+        imgInput.value = '';
+      });
+      const removeBtn = document.getElementById('chatbot-attachment-remove');
+      this.bindOnce(removeBtn, 'click', () => {
         this.pendingImageFile = null;
         this.hideAttachmentPreview();
+      });
+    }
 
-        await this.sendImageFile(fileToSend, message || 'Analise a imagem de forma objetiva.');
+    showAttachmentPreview() {
+      const el = document.getElementById('chatbot-attachment-preview');
+      if (el) el.style.display = 'flex';
+    }
+    hideAttachmentPreview() {
+      const el = document.getElementById('chatbot-attachment-preview');
+      if (el) el.style.display = 'none';
+    }
+
+    bindEvents() {
+      const toggle = document.getElementById('chatbot-toggle');
+      const close = document.getElementById('chatbot-close');
+      const input = document.getElementById('chatbot-input');
+      const sendBtn = document.getElementById('chatbot-send');
+
+      this.bindOnce(toggle, 'click', () => this.toggleChat());
+      this.bindOnce(close, 'click', () => this.closeChat());
+      this.bindOnce(input, 'keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.sendMessage();
+        }
+      });
+      this.bindOnce(sendBtn, 'click', () => this.sendMessage());
+    }
+
+    toggleChat() {
+      const windowEl = document.getElementById('chatbot-window');
+      const container = document.querySelector('.chatbot-container');
+      if (!windowEl) return;
+      if (this.isOpen) {
+        windowEl.classList.remove('show');
+        this.isOpen = false;
+        if (container) container.classList.remove('open');
       } else {
-        // Send the text message to the bot. Include tenant headers so the
-        // backend knows which organisation and flow to operate under. The
-        // request body contains only the message; any additional session
-        // information is ignored by the backend but kept for future use.
-        const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
-        const response = await fetch(this.webhookUrl, {
+        windowEl.classList.add('show');
+        this.isOpen = true;
+        if (container) container.classList.add('open');
+        setTimeout(() => {
+          const input = document.getElementById('chatbot-input');
+          if (input) input.focus();
+        }, 300);
+      }
+    }
+    openChat(){ if (!this.isOpen) this.toggleChat(); }
+    closeChat(){ if (this.isOpen) this.toggleChat(); }
+
+    addInitialMessage(){ /* opcional */ }
+
+    _pushHistory(role, content){
+      this.history.push({ role, content, ts: Date.now() });
+      if (this.history.length > this.maxHistory) this.history = this.history.slice(-this.maxHistory);
+    }
+    clearMemory(){ this.history = []; showNotification('Memória do chat limpa.','info'); }
+
+    async sendMessage() {
+      const input = document.getElementById('chatbot-input');
+      const raw = input.value || '';
+      const message = raw.trim();
+      if (this.isTyping) return;
+
+      const hasPendingImage = !!this.pendingImageFile;
+      if (!message && !hasPendingImage) return;
+
+      // ecoa e limpa
+      if (message) {
+        this.addMessage(message, 'user');
+        this._pushHistory('user', message);
+      }
+      input.value = '';
+      input.blur();
+
+      this.showTypingIndicator();
+
+      try {
+        if (hasPendingImage) {
+          const fileToSend = this.pendingImageFile;
+          this.pendingImageFile = null;
+          this.hideAttachmentPreview();
+
+          await this.sendImageFile(fileToSend, message || 'Analise a imagem e cadastre o produto.');
+        } else {
+          const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
+          const response = await fetch(this.webhookUrl, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ message })
+          });
+          const isJson = response.headers.get('content-type')?.includes('application/json');
+          const data = isJson ? await response.json() : { reply: await response.text() };
+
+          this.hideTypingIndicator();
+
+          const text =
+            (data && (data.reply || data.output || data.message || data.text || data.content
+              || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'OK.';
+
+          this.addMessage(text, 'bot');
+          this._pushHistory('assistant', text);
+        }
+      } catch (error) {
+        console.error('Erro ao enviar:', error);
+        this.hideTypingIndicator();
+        this.addMessage('Desculpe, ocorreu um erro. Tente novamente em alguns instantes.', 'bot');
+        this._pushHistory('assistant', '[erro]');
+      }
+    }
+
+    addMessage(text, sender) {
+      const messagesContainer = document.getElementById('chatbot-messages');
+      if (!messagesContainer) return;
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}-message`;
+
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      messageDiv.innerHTML = `
+        <div class="message-content">
+          <p>${this.escapeHtml(text)}</p>
+        </div>
+        <div class="message-time">${timeString}</div>
+      `;
+
+      messagesContainer.appendChild(messageDiv);
+      this.scrollToBottom();
+    }
+
+    addImageBubble(src, sender) {
+      const messagesContainer = document.getElementById('chatbot-messages');
+      if (!messagesContainer) return;
+      const wrap = document.createElement('div');
+      wrap.className = `message ${sender}-message`;
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      wrap.innerHTML = `
+        <div class="message-content">
+          <img src="${src}" alt="Imagem" style="max-width:220px; border-radius:8px; display:block;">
+        </div>
+        <div class="message-time">${timeString}</div>
+      `;
+      messagesContainer.appendChild(wrap);
+      this.scrollToBottom();
+    }
+
+    // *** AQUI ESTÁ O FIX PRINCIPAL ***
+    async sendImageFile(file, prompt = 'Analise a imagem de forma objetiva.') {
+      if (!file) return;
+      try {
+        const fd = new FormData();
+        fd.append('image', file, file.name || 'image.png');
+        fd.append('message', prompt);
+
+        // NUNCA defina Content-Type com FormData — deixe o navegador adicionar o boundary
+        // Envie somente cabeçalhos de tenant e auth
+        const headers = {
+          'X-Org-ID': defaultHeaders['X-Org-ID'],
+          'X-Flow-ID': defaultHeaders['X-Flow-ID']
+        };
+        if (defaultHeaders['Authorization']) {
+          headers['Authorization'] = defaultHeaders['Authorization'];
+        }
+
+        const resp = await fetch(this.webhookUrl, {
           method: 'POST',
           headers,
-          body: JSON.stringify({
-            message
-          })
+          body: fd
         });
-        if (!response.ok) throw new Error('Erro na resposta do servidor');
-        const data = await response.json();
+
+        const contentType = resp.headers.get('content-type') || '';
+        const data = contentType.includes('application/json')
+          ? await resp.json()
+          : { reply: await resp.text() };
 
         this.hideTypingIndicator();
 
-        // 🔥 Normaliza diferentes formatos de resposta do backend
-        const text =
-          (data && (data.reply || data.output || data.message || data.text || data.content
-            || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'OK.';
+        if (!resp.ok) {
+          const msg = (data && (data.reply || data.message || data.error)) || `Erro ${resp.status}`;
+          this.addMessage(String(msg), 'bot');
+          this._pushHistory('assistant', '[erro imagem]');
+          return;
+        }
 
+        const text = (data && (data.reply || data.message || data.text || data.content)) || 'Imagem recebida.';
         this.addMessage(text, 'bot');
         this._pushHistory('assistant', text);
+      } catch (e) {
+        console.error(e);
+        this.hideTypingIndicator();
+        this.addMessage('Erro ao analisar a imagem.', 'bot');
+        this._pushHistory('assistant', '[erro imagem]');
       }
-    } catch (error) {
-      console.error('Erro ao enviar:', error);
-      this.hideTypingIndicator();
-      this.addMessage('Desculpe, ocorreu um erro. Tente novamente em alguns instantes.', 'bot');
-      this._pushHistory('assistant', '[erro]');
     }
-  }
 
-  addMessage(text, sender) {
-    const messagesContainer = document.getElementById('chatbot-messages');
-    if (!messagesContainer) return;
+    showTypingIndicator() {
+      if (this.isTyping) return;
+      this.isTyping = true;
+      const messagesContainer = document.getElementById('chatbot-messages');
+      if (!messagesContainer) return;
 
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}-message`;
-
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-    messageDiv.innerHTML = `
-      <div class="message-content">
-        <p>${this.escapeHtml(text)}</p>
-      </div>
-      <div class="message-time">${timeString}</div>
-    `;
-
-    messagesContainer.appendChild(messageDiv);
-    this.scrollToBottom();
-  }
-
-  addImageBubble(src, sender) {
-    const messagesContainer = document.getElementById('chatbot-messages');
-    if (!messagesContainer) return;
-    const wrap = document.createElement('div');
-    wrap.className = `message ${sender}-message`;
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    wrap.innerHTML = `
-      <div class="message-content">
-        <img src="${src}" alt="Imagem" style="max-width:220px; border-radius:8px; display:block;">
-      </div>
-      <div class="message-time">${timeString}</div>
-    `;
-    messagesContainer.appendChild(wrap);
-    this.scrollToBottom();
-  }
-
-  async sendImageFile(file, prompt = 'Analise a imagem de forma objetiva.') {
-    if (!file) return;
-    try {
-      const fd = new FormData();
-      fd.append('image', file, file.name || 'image.png');
-      // The bot expects a "message" field with any accompanying text.
-      fd.append('message', prompt);
-
-      // Use the bot endpoint for image uploads. Do not set Content-Type
-      // explicitly when sending FormData – the browser will add the correct
-      // multipart boundary. Include tenant and auth headers so the backend
-      // identifies the organisation and user.
-      const imgHeaders = { ...defaultHeaders };
-      const resp = await fetch(VISION_UPLOAD_URL, {
-        method: 'POST',
-        headers: imgHeaders,
-        body: fd
-      });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const data = await resp.json();
-
-      this.hideTypingIndicator();
-
-      // Interpret the bot response. It returns a "reply" field with the
-      // assistant's message. There is no image_url in this endpoint.
-      const text = (data && (data.reply || data.message || data.text || data.content)) || 'Imagem recebida.';
-
-      this.addMessage(text, 'bot');
-      this._pushHistory('assistant', text);
-    } catch (e) {
-      console.error(e);
-      this.hideTypingIndicator();
-      this.addMessage('Erro ao analisar a imagem.', 'bot');
-      this._pushHistory('assistant', '[erro imagem]');
-    }
-  }
-
-  showTypingIndicator() {
-    if (this.isTyping) return;
-    this.isTyping = true;
-    const messagesContainer = document.getElementById('chatbot-messages');
-    if (!messagesContainer) return;
-
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message bot-message';
-    typingDiv.id = 'typing-indicator';
-    typingDiv.innerHTML = `
-      <div class="typing-indicator">
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot-message';
+      typingDiv.id = 'typing-indicator';
+      typingDiv.innerHTML = `
+        <div class="typing-indicator">
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
         </div>
-      </div>
-    `;
-    messagesContainer.appendChild(typingDiv);
-    this.scrollToBottom();
+      `;
+      messagesContainer.appendChild(typingDiv);
+      this.scrollToBottom();
 
-    const sendBtn = document.getElementById('chatbot-send');
-    if (sendBtn) sendBtn.disabled = true;
+      const sendBtn = document.getElementById('chatbot-send');
+      if (sendBtn) sendBtn.disabled = true;
+    }
+
+    hideTypingIndicator() {
+      this.isTyping = false;
+      const typingIndicator = document.getElementById('typing-indicator');
+      if (typingIndicator) typingIndicator.remove();
+
+      const sendBtn = document.getElementById('chatbot-send');
+      if (sendBtn) sendBtn.disabled = false;
+    }
+
+    scrollToBottom() {
+      const messagesContainer = document.getElementById('chatbot-messages');
+      if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
   }
+  // ===== FIM da classe Chatbot corrigida =====
 
-  hideTypingIndicator() {
-    this.isTyping = false;
-    const typingIndicator = document.getElementById('typing-indicator');
-    if (typingIndicator) typingIndicator.remove();
-
-    const sendBtn = document.getElementById('chatbot-send');
-    if (sendBtn) sendBtn.disabled = false;
-  }
-
-  scrollToBottom() {
-    const messagesContainer = document.getElementById('chatbot-messages');
-    if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
-  }
-
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-}
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', function() {
-  updateProductTable();
-  updateNavigationButtons();
-  window.chatbot = new Chatbot();
-});
