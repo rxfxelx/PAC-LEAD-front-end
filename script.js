@@ -1081,19 +1081,24 @@ class Chatbot {
 
         await this.sendImageFile(fileToSend, message || 'Analise a imagem de forma objetiva.');
       } else {
-        // Mensagem de texto
+        // Send the text message to the bot. Include tenant headers so the
+        // backend knows which organisation and flow to operate under. The
+        // request body contains only the message; any additional session
+        // information is ignored by the backend but kept for future use.
         const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
         const response = await fetch(this.webhookUrl, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ message })
+          body: JSON.stringify({
+            message
+          })
         });
         if (!response.ok) throw new Error('Erro na resposta do servidor');
         const data = await response.json();
 
         this.hideTypingIndicator();
 
-        // Normaliza diferentes formatos de resposta do backend
+        // 🔥 Normaliza diferentes formatos de resposta do backend
         const text =
           (data && (data.reply || data.output || data.message || data.text || data.content
             || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'OK.';
@@ -1147,48 +1152,67 @@ class Chatbot {
     this.scrollToBottom();
   }
 
-  // *** FIX: enviar FormData sem Content-Type manual ***
   async sendImageFile(file, prompt = 'Analise a imagem de forma objetiva.') {
-    const fd = new FormData();
-    fd.append('image', file);
-    fd.append('message', prompt);
-    const headers = {
-      'X-Org-ID': defaultHeaders['X-Org-ID'],
-      'X-Flow-ID': defaultHeaders['X-Flow-ID']
-    };
-    if (defaultHeaders['Authorization']) headers['Authorization'] = defaultHeaders['Authorization'];
-    const resp = await fetch(VISION_UPLOAD_URL, {
-      method: 'POST',
-      headers,
-      body: fd
-    });
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('image', file, file.name || 'image.png');
+      // The bot expects a "message" field with any accompanying text.
+      fd.append('message', prompt);
+
+      // Use the bot endpoint for image uploads. Do not set Content-Type
+      // explicitly when sending FormData – the browser will add the correct
+      // multipart boundary. Include tenant and auth headers so the backend
+      // identifies the organisation and user.
+      const imgHeaders = { ...defaultHeaders };
+      const resp = await fetch(VISION_UPLOAD_URL, {
+        method: 'POST',
+        headers: imgHeaders,
+        body: fd
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+
+      this.hideTypingIndicator();
+
+      // Interpret the bot response. It returns a "reply" field with the
+      // assistant's message. There is no image_url in this endpoint.
+      const text = (data && (data.reply || data.message || data.text || data.content)) || 'Imagem recebida.';
+
+      this.addMessage(text, 'bot');
+      this._pushHistory('assistant', text);
+    } catch (e) {
+      console.error(e);
+      this.hideTypingIndicator();
+      this.addMessage('Erro ao analisar a imagem.', 'bot');
+      this._pushHistory('assistant', '[erro imagem]');
+    }
   }
 
+  showTypingIndicator() {
+    if (this.isTyping) return;
+    this.isTyping = true;
+    const messagesContainer = document.getElementById('chatbot-messages');
+    if (!messagesContainer) return;
 
-    showTypingIndicator() {
-      if (this.isTyping) return;
-      this.isTyping = true;
-      const messagesContainer = document.getElementById('chatbot-messages');
-      if (!messagesContainer) return;
-
-      const typingDiv = document.createElement('div');
-      typingDiv.className = 'message bot-message';
-      typingDiv.id = 'typing-indicator';
-      typingDiv.innerHTML = `
-        <div class="typing-indicator">
-          <div class="typing-dots">
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-            <div class="typing-dot"></div>
-          </div>
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot-message';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.innerHTML = `
+      <div class="typing-indicator">
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
         </div>
-      `;
-      messagesContainer.appendChild(typingDiv);
-      this.scrollToBottom();
+      </div>
+    `;
+    messagesContainer.appendChild(typingDiv);
+    this.scrollToBottom();
 
-      const sendBtn = document.getElementById('chatbot-send');
-      if (sendBtn) sendBtn.disabled = true;
-    }
+    const sendBtn = document.getElementById('chatbot-send');
+    if (sendBtn) sendBtn.disabled = true;
+  }
 
   hideTypingIndicator() {
     this.isTyping = false;
