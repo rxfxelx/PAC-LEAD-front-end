@@ -720,15 +720,19 @@ function reaisToCents(value) {
 // Envia os dados atualizados de um produto para o backend. Retorna true se ok.
 async function updateProductOnBackend(id, product) {
   try {
+    // Monta payload mínimo para atualização: título, categoria e preço em centavos.
     const payload = {
       title: product.name,
-      slug: product.description,
-      status: product.status || 'active',
-      image_url: product.imageUrl || '',
-      price_cents: product.priceCents,
-      stock: product.stock,
+      // Enviamos slug vazio para que o backend mantenha o valor atual.
+      slug: '',
       category: product.category || ''
     };
+    // Inclui price_cents somente se for um número (mesmo zero); caso contrário, envia null.
+    if (typeof product.priceCents === 'number' && !isNaN(product.priceCents)) {
+      payload.price_cents = product.priceCents;
+    } else {
+      payload.price_cents = null;
+    }
     const res = await fetch(`${BACKEND_BASE}/api/products/${id}`, {
       method: 'PUT',
       headers: defaultHeaders,
@@ -752,12 +756,10 @@ function openEditProduct(id) {
   // Preenche campos
   document.getElementById('edit-product-id').value = product.id;
   document.getElementById('edit-product-name').value = product.name || '';
-  document.getElementById('edit-product-description').value = product.description || '';
-  document.getElementById('edit-product-price').value = (product.price != null ? product.price.toFixed(2) : '0.00').replace('.', ',');
-  document.getElementById('edit-product-stock').value = product.stock || 0;
+  // Preenche o preço usando ponto como separador decimal para inputs do tipo number.
+  document.getElementById('edit-product-price').value = (product.price != null ? product.price.toFixed(2) : '');
+  // Seleciona a categoria correspondente no select. Se não existir, valor fica vazio.
   document.getElementById('edit-product-category').value = product.category || '';
-  document.getElementById('edit-product-status').value = product.status || 'active';
-  document.getElementById('edit-product-image').value = product.imageRaw || '';
   // Exibe o modal
   const modalEl = document.getElementById('editProductModal');
   if (modalEl) {
@@ -770,12 +772,8 @@ function openEditProduct(id) {
 async function saveEditProduct() {
   const id = parseInt(document.getElementById('edit-product-id').value, 10);
   const name = document.getElementById('edit-product-name').value.trim();
-  const description = document.getElementById('edit-product-description').value.trim();
   const priceStr = document.getElementById('edit-product-price').value.trim();
-  const stock = parseInt(document.getElementById('edit-product-stock').value, 10) || 0;
   const category = document.getElementById('edit-product-category').value.trim();
-  const status = document.getElementById('edit-product-status').value;
-  const imageUrl = document.getElementById('edit-product-image').value.trim();
   const priceCents = reaisToCents(priceStr);
   if (!name) {
     showNotification('O nome do produto é obrigatório.', 'warning');
@@ -783,12 +781,8 @@ async function saveEditProduct() {
   }
   const updated = {
     name,
-    description,
-    priceCents,
-    stock,
     category,
-    status,
-    imageUrl
+    priceCents
   };
   const ok = await updateProductOnBackend(id, updated);
   if (ok) {
