@@ -8,12 +8,8 @@ const tabs = ['perfil', 'comportamento', 'conversa-ativacao'];
 // Define a base de backend a partir de uma variável global se disponível. Caso
 // contrário, use a instância de produção do Pac‑Lead. Remove barras
 // consecutivas no final para evitar double-slash nas requisições.
-const BACKEND_BASE = (window.__BACKEND_URL__ || 'https://pac-lead-production.up.railway.app').replace(/\/+$/, '');
-// Endpoint for the chatbot. All chat messages and image uploads are sent
-// through this URL so the bot can perform generic chat responses as well
-// as product creation. It replaces the previous vision upload endpoint.
-const BOT_URL = BACKEND_BASE + '/api/bot/message';
-const VISION_UPLOAD_URL = BOT_URL;
+const BACKEND_BASE = (window.__BACKEND_BASE__ || 'https://pac-lead-production.up.railway.app').replace(/\/+$/, '');
+const VISION_UPLOAD_URL = BACKEND_BASE + '/api/vision/upload';
 
 // Define cabeçalhos padrão utilizados em todas as chamadas à API.
 // Os valores de organização e fluxo, bem como o token JWT, são lidos do
@@ -910,10 +906,7 @@ function loadAgentConfig() {
 // ===== CHATBOT =====
 class Chatbot {
   constructor() {
-    // Send chat messages to the bot endpoint which handles both generic
-    // conversation and product registration. It uses the BOT_URL constant
-    // defined above.
-    this.webhookUrl = BOT_URL;
+    this.webhookUrl = BACKEND_BASE + '/api/chat';
     this.isOpen = false;
     this.isTyping = false;
     this.sessionId = this.generateSessionId();
@@ -1081,16 +1074,14 @@ class Chatbot {
 
         await this.sendImageFile(fileToSend, message || 'Analise a imagem de forma objetiva.');
       } else {
-        // Send the text message to the bot. Include tenant headers so the
-        // backend knows which organisation and flow to operate under. The
-        // request body contains only the message; any additional session
-        // information is ignored by the backend but kept for future use.
-        const headers = { ...defaultHeaders, 'Content-Type': 'application/json' };
         const response = await fetch(this.webhookUrl, {
           method: 'POST',
-          headers,
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message
+            message,
+            sessionId: this.sessionId,
+            history: this.history.slice(-this.maxHistory),
+            timestamp: new Date().toISOString()
           })
         });
         if (!response.ok) throw new Error('Erro na resposta do servidor');
@@ -1157,27 +1148,22 @@ class Chatbot {
     try {
       const fd = new FormData();
       fd.append('image', file, file.name || 'image.png');
-      // The bot expects a "message" field with any accompanying text.
-      fd.append('message', prompt);
+      fd.append('prompt', prompt);
+      fd.append('sessionId', this.sessionId);
+      fd.append('history', JSON.stringify(this.history.slice(-this.maxHistory)));
 
-      // Use the bot endpoint for image uploads. Do not set Content-Type
-      // explicitly when sending FormData – the browser will add the correct
-      // multipart boundary. Include tenant and auth headers so the backend
-      // identifies the organisation and user.
-      const imgHeaders = { ...defaultHeaders };
-      const resp = await fetch(VISION_UPLOAD_URL, {
-        method: 'POST',
-        headers: imgHeaders,
-        body: fd
-      });
+      const resp = await fetch(VISION_UPLOAD_URL, { method: 'POST', body: fd });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
 
       this.hideTypingIndicator();
 
-      // Interpret the bot response. It returns a "reply" field with the
-      // assistant's message. There is no image_url in this endpoint.
-      const text = (data && (data.reply || data.message || data.text || data.content)) || 'Imagem recebida.';
+      if (data && data.image_url) this.addImageBubble(data.image_url, 'bot');
+
+      // 🔥 Normaliza diferentes formatos de resposta do backend
+      const text =
+        (data && (data.reply || data.output || data.message || data.text || data.content
+          || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content))) || 'Imagem recebida.';
 
       this.addMessage(text, 'bot');
       this._pushHistory('assistant', text);
