@@ -1313,17 +1313,22 @@ body {
   font-family: "Inter", sans-serif;
 }
 .chatbot-toggle {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0;
+
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #0056b3 100%);
-  border-radius: 50%;
+  
+  
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.4);
+  
   transition: var(--transition);
-  color: #fff;
+  
   font-size: 1.35rem;
 }
 .chatbot-toggle:hover {
@@ -1749,4 +1754,40 @@ body {
   .btn:active {
     transform: translateY(-1px);
   }
+}
+
+
+/* === FIX: preço em linha única na listagem de produtos === */
+.products-table td:nth-child(4),
+.products-table th:nth-child(4) {
+  white-space: nowrap;
+  text-align: right;
+  width: 1%;
+}
+/* limitar descrição na coluna do nome para não empurrar preço */
+.products-table td:nth-child(2) .product-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+/* === FIX: botão do chatbot com fundo transparente e glow seguindo a imagem === */
+.chatbot-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chatbot-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 0 6px rgba(0, 153, 255, .55))
+    drop-shadow(0 0 12px rgba(255, 0, 204, .35));
+  -webkit-filter:
+    drop-shadow(0 0 6px rgba(0, 153, 255, .55))
+    drop-shadow(0 0 12px rgba(255, 0, 204, .35));
+  pointer-events: none;
 }
