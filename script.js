@@ -1411,3 +1411,8 @@ document.addEventListener('DOMContentLoaded', function() {
     saveEditBtn.addEventListener('click', saveEditProduct);
   }
 });
+
+// === SPA: map pathname to section and initialize ===
+function pathToSection(path){var m={'/agente':'agent-config','/analise':'analysis','/produtos':'products','/pagamentos':'payments','/empresa':'company','/usuarios':'users'};return m[path]||'agent-config';}
+document.addEventListener('DOMContentLoaded',function(){try{var p=location.pathname.replace(/\/$/,'');if(p==='')p='/';showSection(pathToSection(p));}catch(e){}});
+window.addEventListener('popstate',function(){try{showSection(pathToSection(location.pathname.replace(/\/$/,'')));}catch(e){}});
