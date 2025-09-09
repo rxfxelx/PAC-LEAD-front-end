@@ -52,25 +52,18 @@ async function fetchProducts() {
     if (!res.ok) throw new Error('Falha ao listar produtos');
     const data = await res.json();
     products = data.items.map(p => {
-      // converte price_cents para float em reais (assume 100 = 1.00)
+      // Converte price_cents para valor em reais
       const price = p.price_cents ? (p.price_cents / 100) : 0;
-      // determina a imagem a ser exibida. O backend expõe somente o campo
-      // image_url. Para compatibilidade com dados antigos, se a string não
-      // contiver um esquema (http, https ou data:), assumimos que trata‑se
-      // de um base64 cru de PNG e prefixamos com data:image/png;base64,
-      // caso contrário usamos a string diretamente.
+      // Determina a imagem a ser exibida. O backend expõe image_url ou image_base64.
       let img = null;
-      const raw = p.image_url || p.image_base64; // image_base64 pode vir de versões antigas
+      const raw = p.image_url || p.image_base64;
       if (raw) {
         const lower = raw.toLowerCase();
         if (lower.startsWith('http') || lower.startsWith('data:')) {
-          // absolute URL or data URI → usa direto
           img = raw;
         } else if (lower.startsWith('/')) {
-          // caminho relativo do backend (ex.: /uploads/abc.png) → prefixa com BACKEND_BASE
           img = `${BACKEND_BASE}${raw}`;
         } else {
-          // assume base64 cru → prefixa com data URI
           img = `data:image/png;base64,${raw}`;
         }
       }
@@ -80,6 +73,11 @@ async function fetchProducts() {
         description: p.slug || '',
         category: p.category || 'Sem categoria',
         price: price,
+        priceCents: p.price_cents || 0,
+        stock: p.stock || 0,
+        status: p.status || 'active',
+        // preserva o valor original de image_url/base64 para envio posterior
+        imageRaw: raw || '',
         image: img
       };
     });
@@ -689,13 +687,123 @@ function updateProductTable() {
       </td>
       <td><span class="badge badge-primary">${product.category}</span></td>
       <td><span class="price-tag">R$ ${product.price.toFixed(2)}</span></td>
-      <td><span class="badge badge-success">Ativo</span></td>
+      <td><span class="badge ${product.status === 'active' ? 'badge-success' : 'badge-secondary'}">${product.status === 'active' ? 'Ativo' : 'Inativo'}</span></td>
       <td>
-        <button class="btn btn-sm btn-outline-primary" title="Editar produto"><i class="fas fa-edit"></i></button>
+        <button class="btn btn-sm btn-outline-primary" onclick="openEditProduct(${product.id})" title="Editar produto"><i class="fas fa-edit"></i></button>
         <button class="btn btn-sm btn-outline-danger" onclick="removeProduct(${product.id})" title="Remover produto"><i class="fas fa-trash"></i></button>
       </td>
     </tr>
   `).join("");
+}
+
+// ==== UTILITÁRIOS DE CONVERSÃO ====
+// Converte um valor em centavos para reais como string com duas casas decimais.
+function centsToReais(cents) {
+  if (!cents || isNaN(cents)) return '0,00';
+  return (cents / 100).toFixed(2).replace('.', ',');
+}
+
+// Converte um valor em reais (string ou número) para inteiro em centavos.
+// Aceita strings com vírgula ou ponto como separador decimal.
+function reaisToCents(value) {
+  if (value === null || value === undefined) return 0;
+  let str = String(value).trim();
+  if (str === '') return 0;
+  // substitui vírgula por ponto para converter em float
+  str = str.replace(/\./g, '').replace(',', '.');
+  const num = parseFloat(str);
+  if (isNaN(num) || num < 0) return 0;
+  return Math.round(num * 100);
+}
+
+// ==== EDIÇÃO DE PRODUTOS ====
+// Envia os dados atualizados de um produto para o backend. Retorna true se ok.
+async function updateProductOnBackend(id, product) {
+  try {
+    const payload = {
+      title: product.name,
+      slug: product.description,
+      status: product.status || 'active',
+      image_url: product.imageUrl || '',
+      price_cents: product.priceCents,
+      stock: product.stock,
+      category: product.category || ''
+    };
+    const res = await fetch(`${BACKEND_BASE}/api/products/${id}`, {
+      method: 'PUT',
+      headers: defaultHeaders,
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Falha ao atualizar produto');
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+// Preenche o modal de edição com os dados do produto selecionado e exibe o modal.
+function openEditProduct(id) {
+  const product = products.find(p => p.id === id);
+  if (!product) {
+    console.warn('Produto não encontrado para edição', id);
+    return;
+  }
+  // Preenche campos
+  document.getElementById('edit-product-id').value = product.id;
+  document.getElementById('edit-product-name').value = product.name || '';
+  document.getElementById('edit-product-description').value = product.description || '';
+  document.getElementById('edit-product-price').value = (product.price != null ? product.price.toFixed(2) : '0.00').replace('.', ',');
+  document.getElementById('edit-product-stock').value = product.stock || 0;
+  document.getElementById('edit-product-category').value = product.category || '';
+  document.getElementById('edit-product-status').value = product.status || 'active';
+  document.getElementById('edit-product-image').value = product.imageRaw || '';
+  // Exibe o modal
+  const modalEl = document.getElementById('editProductModal');
+  if (modalEl) {
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  }
+}
+
+// Lê os valores do modal de edição, envia ao backend e atualiza a tabela.
+async function saveEditProduct() {
+  const id = parseInt(document.getElementById('edit-product-id').value, 10);
+  const name = document.getElementById('edit-product-name').value.trim();
+  const description = document.getElementById('edit-product-description').value.trim();
+  const priceStr = document.getElementById('edit-product-price').value.trim();
+  const stock = parseInt(document.getElementById('edit-product-stock').value, 10) || 0;
+  const category = document.getElementById('edit-product-category').value.trim();
+  const status = document.getElementById('edit-product-status').value;
+  const imageUrl = document.getElementById('edit-product-image').value.trim();
+  const priceCents = reaisToCents(priceStr);
+  if (!name) {
+    showNotification('O nome do produto é obrigatório.', 'warning');
+    return;
+  }
+  const updated = {
+    name,
+    description,
+    priceCents,
+    stock,
+    category,
+    status,
+    imageUrl
+  };
+  const ok = await updateProductOnBackend(id, updated);
+  if (ok) {
+    showNotification('Produto atualizado com sucesso!', 'success');
+  } else {
+    showNotification('Erro ao atualizar produto.', 'danger');
+  }
+  // fecha modal
+  const modalEl = document.getElementById('editProductModal');
+  if (modalEl) {
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+  }
+  // recarrega produtos
+  await fetchProducts();
 }
 async function removeProduct(productId) {
   if (confirm("Tem certeza que deseja remover este produto?")) {
@@ -1302,74 +1410,10 @@ document.addEventListener('DOMContentLoaded', function() {
   updateProductTable();
   updateNavigationButtons();
   window.chatbot = new Chatbot();
-});
 
-
-// === EDIÇÃO DE PRODUTOS ===
-function centsToReais(cents){ if(!cents) return ''; return (cents/100).toFixed(2); }
-function reaisToCents(v){ if(v===null||v===undefined||v==='') return null; const n = String(v).replace(/\./g,'').replace(',', '.'); const f = parseFloat(n); if(isNaN(f)) return null; return Math.round(f*100); }
-
-// Abre modal preenchendo dados do produto
-async function openEditProduct(id){
-  try{
-    // Encontrar produto atual na lista já carregada
-    let p = (window.products || []).find(x => String(x.id) === String(id));
-    if(!p){
-      // fallback: buscar do backend
-      const res = await fetch(`${BACKEND_BASE}/api/products`, { headers: defaultHeaders });
-      const data = await res.json();
-      p = (data.items||[]).find(x => String(x.id) === String(id));
-    }
-    if(!p){ showNotification('Produto não encontrado.','warning'); return; }
-    document.getElementById('edit-product-id').value = p.id;
-    document.getElementById('edit-title').value = p.title || p.name || '';
-    document.getElementById('edit-slug').value = p.slug || p.description || '';
-    document.getElementById('edit-price').value = centsToReais(p.price_cents);
-    document.getElementById('edit-stock').value = (p.stock!=null?p.stock:'');
-    document.getElementById('edit-category').value = p.category || '';
-    document.getElementById('edit-status').value = p.status || 'active';
-    document.getElementById('edit-image-url').value = p.image_url || '';
-
-    const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
-    modal.show();
-  }catch(e){ console.error(e); showNotification('Falha ao abrir edição.','danger'); }
-}
-
-// Salvar alterações via PUT /api/products/{id}
-async function saveEditProduct(){
-  const id = document.getElementById('edit-product-id').value;
-  const body = {
-    title: document.getElementById('edit-title').value.trim(),
-    slug: document.getElementById('edit-slug').value.trim(),
-    status: document.getElementById('edit-status').value,
-    image_url: document.getElementById('edit-image-url').value.trim(),
-    category: document.getElementById('edit-category').value.trim()
-  };
-  const price = reaisToCents(document.getElementById('edit-price').value);
-  const stock = document.getElementById('edit-stock').value;
-  if(price !== null) body.price_cents = price;
-  if(stock !== '' && stock !== null) body.stock = parseInt(stock,10);
-
-  try{
-    const res = await fetch(`${BACKEND_BASE}/api/products/${id}`, {
-      method: 'PUT',
-      headers: defaultHeaders,
-      body: JSON.stringify(body)
-    });
-    if(!res.ok){ const t = await res.text(); throw new Error(t||'Erro ao salvar'); }
-    // Atualiza listagem sem recarregar
-    await fetchProducts();
-    showNotification('Produto atualizado com sucesso!','success');
-    bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
-  }catch(e){ console.error(e); showNotification('Falha ao salvar: '+e.message,'danger'); }
-}
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  const btn = document.getElementById('save-edit-product-btn');
-  if(btn){ btn.addEventListener('click', saveEditProduct); }
-  // Delegação: botão de edição nas linhas da tabela (qualquer elemento com data-edit-id)
-  document.body.addEventListener('click', (ev)=>{
-    const el = ev.target.closest('[data-edit-id]');
-    if(el){ const id = el.getAttribute('data-edit-id'); openEditProduct(id); }
-  });
+  // Vincula o botão de salvar do modal de edição
+  const saveEditBtn = document.getElementById('save-edit-product-btn');
+  if (saveEditBtn) {
+    saveEditBtn.addEventListener('click', saveEditProduct);
+  }
 });
