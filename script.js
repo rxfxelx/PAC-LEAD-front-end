@@ -1303,3 +1303,73 @@ document.addEventListener('DOMContentLoaded', function() {
   updateNavigationButtons();
   window.chatbot = new Chatbot();
 });
+
+
+// === EDIÇÃO DE PRODUTOS ===
+function centsToReais(cents){ if(!cents) return ''; return (cents/100).toFixed(2); }
+function reaisToCents(v){ if(v===null||v===undefined||v==='') return null; const n = String(v).replace(/\./g,'').replace(',', '.'); const f = parseFloat(n); if(isNaN(f)) return null; return Math.round(f*100); }
+
+// Abre modal preenchendo dados do produto
+async function openEditProduct(id){
+  try{
+    // Encontrar produto atual na lista já carregada
+    let p = (window.products || []).find(x => String(x.id) === String(id));
+    if(!p){
+      // fallback: buscar do backend
+      const res = await fetch(`${BACKEND_BASE}/api/products`, { headers: defaultHeaders });
+      const data = await res.json();
+      p = (data.items||[]).find(x => String(x.id) === String(id));
+    }
+    if(!p){ showNotification('Produto não encontrado.','warning'); return; }
+    document.getElementById('edit-product-id').value = p.id;
+    document.getElementById('edit-title').value = p.title || p.name || '';
+    document.getElementById('edit-slug').value = p.slug || p.description || '';
+    document.getElementById('edit-price').value = centsToReais(p.price_cents);
+    document.getElementById('edit-stock').value = (p.stock!=null?p.stock:'');
+    document.getElementById('edit-category').value = p.category || '';
+    document.getElementById('edit-status').value = p.status || 'active';
+    document.getElementById('edit-image-url').value = p.image_url || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+    modal.show();
+  }catch(e){ console.error(e); showNotification('Falha ao abrir edição.','danger'); }
+}
+
+// Salvar alterações via PUT /api/products/{id}
+async function saveEditProduct(){
+  const id = document.getElementById('edit-product-id').value;
+  const body = {
+    title: document.getElementById('edit-title').value.trim(),
+    slug: document.getElementById('edit-slug').value.trim(),
+    status: document.getElementById('edit-status').value,
+    image_url: document.getElementById('edit-image-url').value.trim(),
+    category: document.getElementById('edit-category').value.trim()
+  };
+  const price = reaisToCents(document.getElementById('edit-price').value);
+  const stock = document.getElementById('edit-stock').value;
+  if(price !== null) body.price_cents = price;
+  if(stock !== '' && stock !== null) body.stock = parseInt(stock,10);
+
+  try{
+    const res = await fetch(`${BACKEND_BASE}/api/products/${id}`, {
+      method: 'PUT',
+      headers: defaultHeaders,
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){ const t = await res.text(); throw new Error(t||'Erro ao salvar'); }
+    // Atualiza listagem sem recarregar
+    await fetchProducts();
+    showNotification('Produto atualizado com sucesso!','success');
+    bootstrap.Modal.getInstance(document.getElementById('editProductModal')).hide();
+  }catch(e){ console.error(e); showNotification('Falha ao salvar: '+e.message,'danger'); }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btn = document.getElementById('save-edit-product-btn');
+  if(btn){ btn.addEventListener('click', saveEditProduct); }
+  // Delegação: botão de edição nas linhas da tabela (qualquer elemento com data-edit-id)
+  document.body.addEventListener('click', (ev)=>{
+    const el = ev.target.closest('[data-edit-id]');
+    if(el){ const id = el.getAttribute('data-edit-id'); openEditProduct(id); }
+  });
+});
