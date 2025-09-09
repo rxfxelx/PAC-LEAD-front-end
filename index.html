@@ -677,8 +677,9 @@
                preenchidos dinamicamente via JavaScript quando o usuário clica no botão de editar.
                Ao salvar, as alterações são enviadas para o backend através de uma chamada PUT.
           -->
+          <!-- Modal de edição de produto (campos reduzidos: Nome, Preço, Categoria) -->
           <div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title">Editar Produto</h5>
@@ -686,52 +687,41 @@
                 </div>
                 <div class="modal-body">
                   <input type="hidden" id="edit-product-id">
-                  <div class="row g-3">
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="edit-product-name">Nome</label>
-                        <input type="text" class="form-control" id="edit-product-name" placeholder="Nome do produto">
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="edit-product-price">Preço (R$)</label>
-                        <input type="number" class="form-control" id="edit-product-price" step="0.01" min="0" placeholder="0,00">
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="edit-product-stock">Estoque</label>
-                        <input type="number" class="form-control" id="edit-product-stock" min="0" placeholder="0">
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="edit-product-category">Categoria</label>
-                        <input type="text" class="form-control" id="edit-product-category" placeholder="Categoria">
-                      </div>
-                    </div>
-                    <div class="col-md-6">
-                      <div class="form-group">
-                        <label for="edit-product-status">Status</label>
-                        <select class="form-control" id="edit-product-status">
-                          <option value="active">Ativo</option>
-                          <option value="inactive">Inativo</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="col-md-12">
-                      <div class="form-group">
-                        <label for="edit-product-description">Descrição</label>
-                        <textarea class="form-control" id="edit-product-description" rows="3"></textarea>
-                      </div>
-                    </div>
-                    <div class="col-md-12">
-                      <div class="form-group">
-                        <label for="edit-product-image">URL da Imagem</label>
-                        <input type="text" class="form-control" id="edit-product-image" placeholder="/uploads/exemplo.png ou URL completa">
-                      </div>
-                    </div>
+                  <div class="mb-3">
+                    <label for="edit-product-name" class="form-label">Nome</label>
+                    <input type="text" class="form-control" id="edit-product-name" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit-product-price" class="form-label">Preço (R$)</label>
+                    <input type="number" class="form-control" id="edit-product-price" step="0.01" min="0" required>
+                  </div>
+                  <div class="mb-3">
+                    <label for="edit-product-category" class="form-label">Categoria</label>
+                    <select class="form-control" id="edit-product-category">
+                      <option value="Eletrônicos">Eletrônicos</option>
+                      <option value="Informática">Informática</option>
+                      <option value="Celulares e Acessórios">Celulares e Acessórios</option>
+                      <option value="Roupas">Roupas</option>
+                      <option value="Calçados">Calçados</option>
+                      <option value="Casa">Casa</option>
+                      <option value="Decoração">Decoração</option>
+                      <option value="Móveis">Móveis</option>
+                      <option value="Esportes">Esportes</option>
+                      <option value="Fitness e Academia">Fitness e Academia</option>
+                      <option value="Livros">Livros</option>
+                      <option value="Jogos e Consoles">Jogos e Consoles</option>
+                      <option value="Brinquedos">Brinquedos</option>
+                      <option value="Saúde e Beleza">Saúde e Beleza</option>
+                      <option value="Cosméticos">Cosméticos</option>
+                      <option value="Alimentos e Bebidas">Alimentos e Bebidas</option>
+                      <option value="Pet Shop">Pet Shop</option>
+                      <option value="Ferramentas e Construção">Ferramentas e Construção</option>
+                      <option value="Automotivo">Automotivo</option>
+                      <option value="Jardinagem">Jardinagem</option>
+                      <option value="Escritório e Papelaria">Escritório e Papelaria</option>
+                      <option value="Música e Instrumentos">Música e Instrumentos</option>
+                      <option value="Viagens e Lazer">Viagens e Lazer</option>
+                    </select>
                   </div>
                 </div>
                 <div class="modal-footer">
