@@ -1074,13 +1074,46 @@ class Chatbot {
 
         await this.sendImageFile(fileToSend, message || 'Analise a imagem de forma objetiva.');
       } else {
+        // Monta cabeçalhos dinâmicos a partir do localStorage. Inclui org_id,
+        // flow_id e Authorization (quando existir) para garantir que o backend
+        // receba o contexto correto do usuário. Essa função anônima busca
+        // os valores mais recentes do armazenamento local em cada envio.
+        const dynHeaders = (() => {
+          let orgId = '1';
+          let flowId = '1';
+          let authHeader;
+          try {
+            const storedOrg = localStorage.getItem('org_id');
+            const storedFlow = localStorage.getItem('flow_id');
+            const token = localStorage.getItem('token');
+            if (storedOrg) orgId = storedOrg;
+            if (storedFlow) flowId = storedFlow;
+            if (token) authHeader = `Bearer ${token}`;
+          } catch (_) {
+            // Ignora erros de leitura do localStorage (p. ex. modo privado)
+          }
+          const h = {
+            'Content-Type': 'application/json',
+            'X-Org-ID': orgId,
+            'X-Flow-ID': flowId
+          };
+          if (authHeader) h['Authorization'] = authHeader;
+          return h;
+        })();
+
+        // Normaliza o histórico enviado para conter apenas role e content,
+        // descartando propriedades internas (como ts) que o backend ignora.
+        const normalizedHistory = this.history
+          .slice(-this.maxHistory)
+          .map(({ role, content }) => ({ role, content }));
+
         const response = await fetch(this.webhookUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: dynHeaders,
           body: JSON.stringify({
             message,
+            history: normalizedHistory,
             sessionId: this.sessionId,
-            history: this.history.slice(-this.maxHistory),
             timestamp: new Date().toISOString()
           })
         });
@@ -1152,7 +1185,28 @@ class Chatbot {
       fd.append('sessionId', this.sessionId);
       fd.append('history', JSON.stringify(this.history.slice(-this.maxHistory)));
 
-      const resp = await fetch(VISION_UPLOAD_URL, { method: 'POST', body: fd });
+      // Monta cabeçalhos dinâmicos para a requisição de imagem.
+      const dynHeaders = (() => {
+        let orgId = '1';
+        let flowId = '1';
+        let authHeader;
+        try {
+          const storedOrg = localStorage.getItem('org_id');
+          const storedFlow = localStorage.getItem('flow_id');
+          const token = localStorage.getItem('token');
+          if (storedOrg) orgId = storedOrg;
+          if (storedFlow) flowId = storedFlow;
+          if (token) authHeader = `Bearer ${token}`;
+        } catch (_) {}
+        const h = {
+          'X-Org-ID': orgId,
+          'X-Flow-ID': flowId
+        };
+        if (authHeader) h['Authorization'] = authHeader;
+        return h;
+      })();
+
+      const resp = await fetch(VISION_UPLOAD_URL, { method: 'POST', headers: dynHeaders, body: fd });
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
       const data = await resp.json();
 
