@@ -64,8 +64,13 @@ async function fetchProducts() {
       if (raw) {
         const lower = raw.toLowerCase();
         if (lower.startsWith('http') || lower.startsWith('data:')) {
+          // absolute URL or data URI → usa direto
           img = raw;
+        } else if (lower.startsWith('/')) {
+          // caminho relativo do backend (ex.: /uploads/abc.png) → prefixa com BACKEND_BASE
+          img = `${BACKEND_BASE}${raw}`;
         } else {
+          // assume base64 cru → prefixa com data URI
           img = `data:image/png;base64,${raw}`;
         }
       }
@@ -1072,7 +1077,9 @@ class Chatbot {
         this.pendingImageFile = null;
         this.hideAttachmentPreview();
 
-        await this.sendImageFile(fileToSend, message || 'Analise a imagem de forma objetiva.');
+        // Ao enviar imagem, **não** repassamos a mensagem do usuário como prompt
+        // para a visão, para que o modelo gere o nome/descrição com base na foto.
+        await this.sendImageFile(fileToSend);
       } else {
         // Monta cabeçalhos dinâmicos a partir do localStorage. Inclui org_id,
         // flow_id e Authorization (quando existir) para garantir que o backend
@@ -1191,7 +1198,7 @@ class Chatbot {
     this.scrollToBottom();
   }
 
-  async sendImageFile(file, prompt = 'Analise a imagem de forma objetiva.') {
+  async sendImageFile(file, prompt = '') {
     if (!file) return;
     try {
       const fd = new FormData();
